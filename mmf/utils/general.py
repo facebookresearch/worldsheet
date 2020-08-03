@@ -143,7 +143,32 @@ def get_optimizer_parameters(model, config):
     if is_parallel and hasattr(model.module, "get_optimizer_parameters"):
         parameters = model.module.get_optimizer_parameters(config)
 
+    for group in parameters:
+        group["params"] = list(group["params"])
+
+    check_unused_parameters(parameters, model, config)
+
     return parameters
+
+
+def check_unused_parameters(parameters, model, config):
+    optimizer_param_set = {p for group in parameters for p in group["params"]}
+    unused_param_names = [
+        n for n, p in model.named_parameters()
+        if p.requires_grad and p not in optimizer_param_set
+    ]
+    if len(unused_param_names) > 0:
+        logger.info(
+            "Model parameters not used to optimizer: {}".format(
+                " ".join(unused_param_names)
+            )
+        )
+        if not config.optimizer.allow_unused_parameters:
+            raise Exception(
+                "Found model parameters not used by optimizer. Please check the "
+                "model's get_optimizer_parameters and add all parameters. Set "
+                "optimizer.allow_unused_parameters to False to ignore it."
+            )
 
 
 def dict_to_string(dictionary):

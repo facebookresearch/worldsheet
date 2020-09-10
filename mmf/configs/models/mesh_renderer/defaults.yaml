@@ -1,0 +1,30 @@
+model_config:
+  mesh_renderer:
+    batch_size: ${training.batch_size}
+    image_size_H: 256
+    image_size_W: 256
+    grid_stride: 8
+    z_min: 0.02
+    z_max: 10.
+    pred_inv_z: true
+    backbone_name: resnet50
+    backbone_dim: 2048
+    rendering:
+      blur_radius: 1e-6
+      faces_per_pixel: 10
+      clip_barycentric_coords: false
+      hfov: 90
+      sigma: 1e-4
+      gamma: 1e-4
+      z_background: 1.7432  # Replica mean depth
+      background_color: [0.64926944, 0.61896299, 0.64431339]  # Replica mean RGB
+      gblur_kernel_size: 7
+      gblur_sigma: 2
+      gblur_weight_thresh: 1e-4
+    loss_weights:
+      z_grid_l1_0: 200
+      depth_l1_0: 200
+      depth_l1_1: 200
+      image_l1_1: 400
+      grid_offset: 20
+      mesh_laplacian: 0.01

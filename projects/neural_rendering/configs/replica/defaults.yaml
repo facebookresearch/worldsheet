@@ -1,0 +1,33 @@
+optimizer:
+  type: adam_w  # HuggingFace transformer's AdamW
+  params:
+    lr: 1e-4
+    eps: 1e-8
+    weight_decay: 1e-5
+
+scheduler:
+  type: multi_step
+  params:
+    use_warmup: true
+    lr_steps:
+    - 90000
+    - 100000
+    lr_ratio: 0.2
+    warmup_iterations: 1000
+    warmup_factor: 0.25
+
+training:
+  clip_norm_mode: all
+  clip_gradients: true
+  max_grad_l2_norm: 5
+  lr_scheduler: true
+  max_updates: 120000
+  checkpoint_interval: 20000
+  evaluation_interval: 10000000  # don't evaluate
+  batch_size: 64
+  early_stop:
+    enabled: false
+    criteria: total_loss
+    minimize: true
+  stdout_capture: false
+  find_unused_parameters: true

@@ -88,51 +88,57 @@ class MeshRenderer(BaseModel):
         # network input
         xy_offset, z_grid = self.offset_and_depth_predictor(sample_list.trans_img_0)
 
-        # use the original image (RGB value in 0~1) as rendering input
-        rendering_results = self.novel_view_projector(
-            xy_offset=xy_offset,
-            z_grid=z_grid,
-            rgb_in=sample_list.orig_img_0,
-            R_in=sample_list.R_0,
-            T_in=sample_list.T_0,
-            R_out_list=[sample_list.R_0, sample_list.R_1],
-            T_out_list=[sample_list.T_0, sample_list.T_1]
-        )
+        rendering_results = {}
+        if not self.config.train_z_grid_only:
+            # use the original image (RGB value in 0~1) as rendering input
+            rendering_results = self.novel_view_projector(
+                xy_offset=xy_offset,
+                z_grid=z_grid,
+                rgb_in=sample_list.orig_img_0,
+                R_in=sample_list.R_0,
+                T_in=sample_list.T_0,
+                R_out_list=[sample_list.R_0, sample_list.R_1],
+                T_out_list=[sample_list.T_0, sample_list.T_1]
+            )
 
         losses = self.forward_losses(sample_list, xy_offset, z_grid, rendering_results)
         return {"losses": losses}
 
     def forward_losses(self, sample_list, xy_offset, z_grid, rendering_results):
-        rgba_0_rec, rgba_1_rec = rendering_results["rgba_out_rec_list"]
-        depth_0_rec, depth_1_rec = rendering_results["depth_out_rec_list"]
-        scaled_verts = rendering_results["scaled_verts"]
-
-        depth_l1_0 = self.loss_depth_l1(
-            depth_pred=depth_0_rec, depth_gt=sample_list.depth_0,
-            loss_mask=sample_list.depth_mask_0.float()
-        )
-        depth_l1_1 = self.loss_depth_l1(
-            depth_pred=depth_1_rec, depth_gt=sample_list.depth_1,
-            loss_mask=sample_list.depth_mask_1.float()
-        )
-        image_l1_1 = self.loss_image_l1(
-            rgb_pred=rgba_1_rec[..., :3], rgb_gt=sample_list.orig_img_1,
-            loss_mask=sample_list.depth_mask_1.float()
-        )
-
         z_grid_l1_0 = self.loss_z_grid_l1(
             z_grid_pred=z_grid, depth_gt=sample_list.depth_0,
             depth_loss_mask=sample_list.depth_mask_0.float()
         )
-
         losses_unscaled = {
             "z_grid_l1_0": z_grid_l1_0,
-            "depth_l1_0": depth_l1_0,
-            "depth_l1_1": depth_l1_1,
-            "image_l1_1": image_l1_1,
             "grid_offset": self.loss_grid_offset(xy_offset),
-            "mesh_laplacian": self.loss_mesh_laplacian(scaled_verts),
         }
+
+        if not self.config.train_z_grid_only:
+            rgba_0_rec, rgba_1_rec = rendering_results["rgba_out_rec_list"]
+            depth_0_rec, depth_1_rec = rendering_results["depth_out_rec_list"]
+            scaled_verts = rendering_results["scaled_verts"]
+
+            depth_l1_0 = self.loss_depth_l1(
+                depth_pred=depth_0_rec, depth_gt=sample_list.depth_0,
+                loss_mask=sample_list.depth_mask_0.float()
+            )
+            depth_l1_1 = self.loss_depth_l1(
+                depth_pred=depth_1_rec, depth_gt=sample_list.depth_1,
+                loss_mask=sample_list.depth_mask_1.float()
+            )
+            image_l1_1 = self.loss_image_l1(
+                rgb_pred=rgba_1_rec[..., :3], rgb_gt=sample_list.orig_img_1,
+                loss_mask=sample_list.depth_mask_1.float()
+            )
+
+            losses_unscaled.update({
+                "depth_l1_0": depth_l1_0,
+                "depth_l1_1": depth_l1_1,
+                "image_l1_1": image_l1_1,
+                "mesh_laplacian": self.loss_mesh_laplacian(scaled_verts),
+            })
+
         for k, v in losses_unscaled.items():
             if not torch.all(torch.isfinite(v)).item():
                 raise Exception("loss {} becomes {}".format(k, v.mean().item()))

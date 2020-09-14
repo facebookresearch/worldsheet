@@ -1,0 +1,13 @@
+includes:
+- ./defaults.yaml
+
+model_config:
+  mesh_renderer:
+    train_z_grid_only: true
+    loss_weights:
+      z_grid_l1_0: 200
+      depth_l1_0: 0.
+      depth_l1_1: 0.
+      image_l1_1: 0.
+      grid_offset: 20
+      mesh_laplacian: 0.01

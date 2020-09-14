@@ -21,6 +21,7 @@ model_config:
       gblur_kernel_size: 7
       gblur_sigma: 2
       gblur_weight_thresh: 1e-4
+    train_z_grid_only: false
     loss_weights:
       z_grid_l1_0: 200
       depth_l1_0: 200

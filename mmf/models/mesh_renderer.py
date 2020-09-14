@@ -79,7 +79,7 @@ class MeshRenderer(BaseModel):
         self.loss_weights = self.config.loss_weights
 
     def get_optimizer_parameters(self, config):
-        params = [{"params": p for p in self.parameters() if p.requires_grad}]
+        params = [{"params": [p for p in self.parameters() if p.requires_grad]}]
 
         return params
 

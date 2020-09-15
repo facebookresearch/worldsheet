@@ -9,6 +9,7 @@ model_config:
     pred_inv_z: true
     backbone_name: resnet50
     backbone_dim: 2048
+    backbone_lr: 1e-4  # might be too high; kept for backward compatibility
     rendering:
       blur_radius: 1e-6
       faces_per_pixel: 10

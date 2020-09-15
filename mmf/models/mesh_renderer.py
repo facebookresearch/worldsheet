@@ -1,4 +1,5 @@
 # Copyright (c) Facebook, Inc. and its affiliates.
+import logging
 import os
 
 import numpy as np
@@ -13,6 +14,9 @@ from mmf.neural_rendering.losses import (
 from mmf.common.registry import registry
 from mmf.models.base_model import BaseModel
 from mmf.utils.distributed import get_world_size, byte_tensor_to_object
+
+
+logger = logging.getLogger(__name__)
 
 
 @registry.register_model("mesh_renderer")
@@ -85,7 +89,22 @@ class MeshRenderer(BaseModel):
         self.loss_weights = self.config.loss_weights
 
     def get_optimizer_parameters(self, config):
-        params = [{"params": [p for p in self.parameters() if p.requires_grad]}]
+        backbone_params = [
+            p for n, p in self.named_parameters() if p.requires_grad and 'backbone' in n
+        ]
+        head_params = [
+            p for n, p in self.named_parameters() if p.requires_grad and 'backbone' not in n
+        ]
+        logger.info(
+            f"Got {len(backbone_params)} backbone parameters "
+            f"and {len(head_params)} head parameters. "
+            f"Applying {self.config.backbone_lr} lr on backbone parameters."
+        )
+
+        params = [
+            {"params": head_params},
+            {"params": backbone_params, "lr": self.config.backbone_lr},
+        ]
 
         return params
 

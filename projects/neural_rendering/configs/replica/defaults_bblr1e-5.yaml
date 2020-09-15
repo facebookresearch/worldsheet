@@ -1,0 +1,6 @@
+includes:
+- ./defaults.yaml
+
+model_config:
+  mesh_renderer:
+    backbone_lr: 1e-5

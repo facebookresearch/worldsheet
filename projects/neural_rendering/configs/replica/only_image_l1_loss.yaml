@@ -1,0 +1,26 @@
+includes:
+- ./defaults.yaml
+
+model_config:
+  mesh_renderer:
+    loss_weights:
+      z_grid_l1_0: 0.
+      depth_l1_0: 0.
+      depth_l1_1: 0.
+      image_l1_1: 800
+      grid_offset: 20
+      mesh_laplacian: 0.01
+
+scheduler:
+  type: multi_step
+  params:
+    use_warmup: true
+    lr_steps:
+    - 55000
+    - 58000
+    lr_ratio: 0.2
+    warmup_iterations: 500
+    warmup_factor: 0.25
+
+training:
+  max_updates: 60000

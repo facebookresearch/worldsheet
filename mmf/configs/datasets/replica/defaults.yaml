@@ -13,9 +13,9 @@ dataset_config:
         train:
         - replica/defaults/annotations/imdb_train.npy
         val:
-        - replica/defaults/annotations/imdb_test.npy
+        - replica/defaults/annotations/imdb_mini_train.npy
         test:
-        - replica/defaults/annotations/imdb_test.npy
+        - replica/defaults/annotations/imdb_mini_test.npy
     processors:
       image_processor:
         type: torchvision_transforms

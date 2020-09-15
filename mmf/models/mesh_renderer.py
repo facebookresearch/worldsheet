@@ -1,4 +1,7 @@
 # Copyright (c) Facebook, Inc. and its affiliates.
+import os
+
+import numpy as np
 import torch
 from torch import nn
 import timm.models as models
@@ -9,7 +12,7 @@ from mmf.neural_rendering.losses import (
 )
 from mmf.common.registry import registry
 from mmf.models.base_model import BaseModel
-from mmf.utils.distributed import get_world_size
+from mmf.utils.distributed import get_world_size, byte_tensor_to_object
 
 
 @registry.register_model("mesh_renderer")
@@ -67,6 +70,9 @@ class MeshRenderer(BaseModel):
 
         self.build_losses()
 
+        if self.config.save_forward_results:
+            os.makedirs(self.config.forward_results_dir, exist_ok=True)
+
     def build_losses(self):
         self.loss_image_l1 = ImageL1Loss()
         self.loss_depth_l1 = DepthL1Loss()
@@ -102,7 +108,37 @@ class MeshRenderer(BaseModel):
             )
 
         losses = self.forward_losses(sample_list, xy_offset, z_grid, rendering_results)
+        if self.config.save_forward_results:
+            self.save_forward_results(sample_list, xy_offset, z_grid, rendering_results)
         return {"losses": losses}
+
+    def save_forward_results(self, sample_list, xy_offset, z_grid, rendering_results):
+        texture_image_rec = rendering_results["texture_image_rec"]
+        rgba_0_rec, rgba_1_rec = rendering_results["rgba_out_rec_list"]
+        depth_0_rec, depth_1_rec = rendering_results["depth_out_rec_list"]
+
+        for n_im in range(xy_offset.size(0)):
+            image_id = byte_tensor_to_object(sample_list.image_id[n_im])
+            save_file = os.path.join(
+                self.config.forward_results_dir, '{}_outputs.npz'.format(image_id)
+            )
+            save_dict = {
+                "orig_img_0": sample_list.orig_img_0[n_im],
+                "orig_img_1": sample_list.orig_img_1[n_im],
+                "depth_0": sample_list.depth_0[n_im],
+                "depth_1": sample_list.depth_1[n_im],
+                "depth_mask_0": sample_list.depth_mask_0[n_im],
+                "depth_mask_1": sample_list.depth_mask_1[n_im],
+                "xy_offset": xy_offset[n_im],
+                "z_grid": z_grid[n_im],
+                "texture_image_rec": texture_image_rec[n_im],
+                "rgba_0_rec": rgba_0_rec[n_im],
+                "rgba_1_rec": rgba_1_rec[n_im],
+                "depth_0_rec": depth_0_rec[n_im],
+                "depth_1_rec": depth_1_rec[n_im],
+            }
+            save_dict = {k: v.detach().cpu().numpy() for k, v in save_dict.items()}
+            np.savez(save_file, **save_dict)
 
     def forward_losses(self, sample_list, xy_offset, z_grid, rendering_results):
         z_grid_l1_0 = self.loss_z_grid_l1(

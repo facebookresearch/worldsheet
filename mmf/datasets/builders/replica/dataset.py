@@ -5,6 +5,7 @@ import numpy as np
 import torch
 from mmf.common.sample import Sample
 from mmf.datasets.mmf_dataset import MMFDataset
+from mmf.utils.distributed import object_to_byte_tensor
 
 
 class ReplicaDataset(MMFDataset):
@@ -18,8 +19,7 @@ class ReplicaDataset(MMFDataset):
     def __getitem__(self, idx):
         sample_info = self.annotation_db[idx]
         current_sample = Sample()
-        current_sample.image_id = sample_info["image_id"]
-
+        current_sample.image_id = object_to_byte_tensor(sample_info["image_id"])
         data_path = os.path.join(self.multiview_data_dir, sample_info["data_path"])
         data_f = np.load(data_path)
         for n_view in range(self.num_view_per_sample):

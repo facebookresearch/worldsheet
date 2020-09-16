@@ -220,9 +220,26 @@ class OffsetAndZGridPredictor(nn.Module):
         self.pred_inv_z = pred_inv_z
 
         network = getattr(models, backbone_name)
-        self.backbone = network(pretrained=True, output_stride=grid_stride)
-        self.xy_offset_predictor = nn.Conv2d(backbone_dim, 2, kernel_size=1)
-        self.z_grid_predictor = nn.Conv2d(backbone_dim, 1, kernel_size=1)
+        # the minimum output stride for resnet is 8 pixels
+        # if we want lower output stride, add ConvTranspose2d at the end
+        resnet_grid_stride = max(grid_stride, 8)
+        self.backbone = network(pretrained=True, output_stride=resnet_grid_stride)
+        assert resnet_grid_stride % grid_stride == 0
+        upsample_stride = resnet_grid_stride // grid_stride
+        self.slice_b = upsample_stride // 2
+        self.slice_e = upsample_stride - 1 - self.slice_b
+        if upsample_stride == 1:
+            assert self.slice_b == 0 and self.slice_e == 0
+            self.xy_offset_predictor = nn.Conv2d(backbone_dim, 2, kernel_size=1)
+            self.z_grid_predictor = nn.Conv2d(backbone_dim, 1, kernel_size=1)
+        else:
+            # upsample in the final prediction layer
+            self.xy_offset_predictor = nn.ConvTranspose2d(
+                backbone_dim, 2, kernel_size=upsample_stride, stride=upsample_stride
+            )
+            self.z_grid_predictor = nn.ConvTranspose2d(
+                backbone_dim, 1, kernel_size=upsample_stride, stride=upsample_stride
+            )
         # allow the vertices to move at most half grid length
         # the relative image width and height are 2 (i.e. -1 to 1)
         # so the grid length x is 2. / (self.grid_W - 1), and similary for y
@@ -244,6 +261,9 @@ class OffsetAndZGridPredictor(nn.Module):
         xy_offset = torch.tanh(xy_offset)
         z_grid = self.z_grid_predictor(features).permute(0, 2, 3, 1)
         z_grid = torch.sigmoid(z_grid)
+        # strip boundaries
+        xy_offset = slice_output(xy_offset, self.slice_b, self.slice_e)
+        z_grid = slice_output(z_grid, self.slice_b, self.slice_e)
         # flip the coordinate axis directions from input image to PyTorch3D screen
         # - input image: x - right, y: down
         # - PyTorch3D screen: x - left, y: up, see https://pytorch3d.org/docs/renderer_getting_started
@@ -268,3 +288,11 @@ class OffsetAndZGridPredictor(nn.Module):
         assert torch.all(torch.isfinite(z_grid)).item()
 
         return xy_offset, z_grid
+
+
+def slice_output(nhwc_tensor, slice_b, slice_e):
+    if slice_b == 0 and slice_e == 0:
+        return nhwc_tensor
+    b = slice_b
+    e = -slice_e if slice_e > 0 else None
+    return nhwc_tensor[:, b:e, b:e]

@@ -1,0 +1,6 @@
+includes:
+- ./defaults.yaml
+
+model_config:
+  mesh_renderer:
+    pred_inv_z_synsin: true

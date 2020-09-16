@@ -49,6 +49,7 @@ class MeshRenderer(BaseModel):
             z_min=self.config.z_min,
             z_max=self.config.z_max,
             pred_inv_z=self.config.pred_inv_z,
+            pred_inv_z_synsin=self.config.pred_inv_z_synsin,
             backbone_name=self.config.backbone_name,
             backbone_dim=self.config.backbone_dim
         )
@@ -204,8 +205,8 @@ class MeshRenderer(BaseModel):
 
 class OffsetAndZGridPredictor(nn.Module):
     def __init__(
-        self, grid_stride, grid_H, grid_W, z_min, z_max, pred_inv_z, backbone_name,
-        backbone_dim
+        self, grid_stride, grid_H, grid_W, z_min, z_max, pred_inv_z, pred_inv_z_synsin,
+        backbone_name, backbone_dim
     ):
         super().__init__()
 
@@ -218,6 +219,7 @@ class OffsetAndZGridPredictor(nn.Module):
         self.z_min = z_min
         self.z_max = z_max
         self.pred_inv_z = pred_inv_z
+        self.pred_inv_z_synsin = pred_inv_z_synsin
 
         network = getattr(models, backbone_name)
         # the minimum output stride for resnet is 8 pixels
@@ -258,9 +260,7 @@ class OffsetAndZGridPredictor(nn.Module):
 
         # predict in NCHW and permute NCHW -> NHWC
         xy_offset = self.xy_offset_predictor(features).permute(0, 2, 3, 1)
-        xy_offset = torch.tanh(xy_offset)
         z_grid = self.z_grid_predictor(features).permute(0, 2, 3, 1)
-        z_grid = torch.sigmoid(z_grid)
         # strip boundaries
         xy_offset = slice_output(xy_offset, self.slice_b, self.slice_e)
         z_grid = slice_output(z_grid, self.slice_b, self.slice_e)
@@ -271,13 +271,20 @@ class OffsetAndZGridPredictor(nn.Module):
         xy_offset = xy_offset.flip([1, 2])
         z_grid = z_grid.flip([1, 2])
 
+        xy_offset = torch.tanh(xy_offset)
         xy_offset = xy_offset * self.xy_offset_scale
         # convert z prediction to the range of (z_min, z_max)
         assert z_grid.size(-1) == 1
-        if self.pred_inv_z:
+        if self.pred_inv_z_synsin:
+            z_grid = torch.sigmoid(z_grid - 2.8)
+            z_grid = 1. / (z_grid * 10 + 0.01) - 0.1
+            z_grid = torch.clamp(z_grid, min=self.z_min, max=self.z_max)
+        elif self.pred_inv_z:
+            z_grid = torch.sigmoid(z_grid)
             z_grid = 1. / (z_grid * 0.75 + 0.01) - 1
             z_grid = torch.clamp(z_grid, min=self.z_min, max=self.z_max)
         else:
+            z_grid = torch.sigmoid(z_grid)
             z_grid = self.z_min + z_grid * (self.z_max - self.z_min)
 
         # flatten the prediction to match the mesh vertices

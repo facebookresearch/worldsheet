@@ -82,7 +82,8 @@ class MeshRenderer(BaseModel):
         self.loss_image_l1 = ImageL1Loss()
         self.loss_depth_l1 = DepthL1Loss()
         self.loss_mesh_laplacian = MeshLaplacianLoss(
-            self.grid_H * self.grid_W, self.novel_view_projector.faces
+            self.grid_H * self.grid_W, self.novel_view_projector.faces,
+            use_l2_loss=self.config.mesh_laplacian_use_l2_loss
         )
         self.loss_grid_offset = GridOffsetLoss(self.grid_H, self.grid_W)
         self.loss_z_grid_l1 = ZGridL1Loss(self.grid_H, self.grid_W)

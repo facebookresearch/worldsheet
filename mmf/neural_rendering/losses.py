@@ -70,8 +70,10 @@ class ZGridL1Loss(nn.Module):
 
 
 class MeshLaplacianLoss(nn.Module):
-    def __init__(self, num_verts, faces):
+    def __init__(self, num_verts, faces, use_l2_loss):
         super().__init__()
+
+        self.use_l2_loss = use_l2_loss
 
         edges = set()
         for v1, v2, v3 in faces.tolist():
@@ -97,9 +99,14 @@ class MeshLaplacianLoss(nn.Module):
     def forward(self, verts):
         assert verts.dim() == 3, 'the verts must be in padded format'
         batch_size = verts.size(0)
-        laplacian_reg = torch.sum(
-            torch.square(torch.matmul(self.laplacian, verts))
-        ) / batch_size
+        if self.use_l2_loss:
+            laplacian_reg = torch.sum(
+                torch.square(torch.matmul(self.laplacian, verts))
+            ) / batch_size
+        else:
+            laplacian_reg = torch.sum(
+                torch.abs(torch.matmul(self.laplacian, verts))
+            ) / batch_size
         return laplacian_reg
 
 

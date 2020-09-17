@@ -24,6 +24,7 @@ model_config:
       gblur_sigma: 2
       gblur_weight_thresh: 1e-4
     train_z_grid_only: false
+    mesh_laplacian_use_l2_loss: true
     loss_weights:
       z_grid_l1_0: 200
       depth_l1_0: 200

@@ -128,6 +128,8 @@ class RandomImageGenerator(object):
         depths = []
         camera_Rs = []
         camera_Ts = []
+        agent_positions = []
+        agent_rotations = []
 
         orig_location = self.env_sim.sample_navigable_point()
         orig_angle = np.random.uniform(0, 2 * np.pi)
@@ -159,12 +161,16 @@ class RandomImageGenerator(object):
             rgbs.append(obs["rgb"].copy())
             camera_Rs.append(R)
             camera_Ts.append(T)
+            agent_positions.append(agent_state.position)
+            agent_rotations.append(agent_state.rotation)
 
         return {
             "rgbs": rgbs,
             "depths": depths,
             "camera_Rs": camera_Rs,
             "camera_Ts": camera_Ts,
+            "agent_positions": agent_positions,
+            "agent_rotations": agent_rotations,
         }
 
 
@@ -218,5 +224,7 @@ if __name__ == "__main__":
                 os.path.join(SAVE_DATA_DIR, npy_filename),
                 depths=np.stack(data["depths"]),
                 camera_Rs=np.stack(data["camera_Rs"]),
-                camera_Ts=np.stack(data["camera_Ts"])
+                camera_Ts=np.stack(data["camera_Ts"]),
+                agent_positions=data["agent_positions"],
+                agent_rotations=data["agent_rotations"]
             )

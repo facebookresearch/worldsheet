@@ -128,6 +128,12 @@ class MeshRenderer(BaseModel):
                 T_out_list=[sample_list.T_0, sample_list.T_1]
             )
 
+        # return only the rendering results and skip loss computation, usually for
+        # visualization on-the-fly by calling this model separately (instead of running
+        # it within the MMF trainer on MMF datasets)
+        if self.config.return_rendering_results_only:
+            return rendering_results
+
         losses = self.forward_losses(sample_list, xy_offset, z_grid, rendering_results)
         if self.config.save_forward_results:
             self.save_forward_results(sample_list, xy_offset, z_grid, rendering_results)

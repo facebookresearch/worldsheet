@@ -34,3 +34,4 @@ model_config:
       mesh_laplacian: 0.01
     save_forward_results: false
     forward_results_dir: save/visualization
+    return_rendering_results_only: false

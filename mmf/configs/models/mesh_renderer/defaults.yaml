@@ -30,6 +30,7 @@ model_config:
       depth_l1_0: 200
       depth_l1_1: 200
       image_l1_1: 400
+      vgg19_perceptual_1: 0.  # kept for backward compatibility
       grid_offset: 20
       mesh_laplacian: 0.01
     save_forward_results: false

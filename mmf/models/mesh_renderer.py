@@ -9,7 +9,8 @@ import timm.models as models
 
 from mmf.neural_rendering.novel_view_projector import NovelViewProjector
 from mmf.neural_rendering.losses import (
-    ImageL1Loss, DepthL1Loss, MeshLaplacianLoss, GridOffsetLoss, ZGridL1Loss
+    ImageL1Loss, DepthL1Loss, MeshLaplacianLoss, GridOffsetLoss, ZGridL1Loss,
+    VGG19PerceptualLoss
 )
 from mmf.common.registry import registry
 from mmf.models.base_model import BaseModel
@@ -87,6 +88,7 @@ class MeshRenderer(BaseModel):
         )
         self.loss_grid_offset = GridOffsetLoss(self.grid_H, self.grid_W)
         self.loss_z_grid_l1 = ZGridL1Loss(self.grid_H, self.grid_W)
+        self.loss_vgg19_perceptual = VGG19PerceptualLoss()
 
         self.loss_weights = self.config.loss_weights
 
@@ -181,6 +183,7 @@ class MeshRenderer(BaseModel):
             rgba_0_rec, rgba_1_rec = rendering_results["rgba_out_rec_list"]
             depth_0_rec, depth_1_rec = rendering_results["depth_out_rec_list"]
             scaled_verts = rendering_results["scaled_verts"]
+            rgb_1_rec = rgba_1_rec[..., :3]
 
             depth_l1_0 = self.loss_depth_l1(
                 depth_pred=depth_0_rec, depth_gt=sample_list.depth_0,
@@ -191,14 +194,22 @@ class MeshRenderer(BaseModel):
                 loss_mask=sample_list.depth_mask_1.float()
             )
             image_l1_1 = self.loss_image_l1(
-                rgb_pred=rgba_1_rec[..., :3], rgb_gt=sample_list.orig_img_1,
+                rgb_pred=rgb_1_rec, rgb_gt=sample_list.orig_img_1,
                 loss_mask=sample_list.depth_mask_1.float()
             )
+            if self.loss_weights["vgg19_perceptual_1"] != 0:
+                vgg19_perceptual_1 = self.loss_vgg19_perceptual(
+                    rgb_pred=rgb_1_rec, rgb_gt=sample_list.orig_img_1,
+                    loss_mask=sample_list.depth_mask_1.float()
+                )
+            else:
+                vgg19_perceptual_1 = torch.tensor(0., device=rgb_1_rec.device)
 
             losses_unscaled.update({
                 "depth_l1_0": depth_l1_0,
                 "depth_l1_1": depth_l1_1,
                 "image_l1_1": image_l1_1,
+                "vgg19_perceptual_1": vgg19_perceptual_1,
                 "mesh_laplacian": self.loss_mesh_laplacian(scaled_verts),
             })
 

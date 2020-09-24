@@ -112,10 +112,31 @@ class MeshRenderer(BaseModel):
 
         return params
 
+    def get_offset_and_depth_from_gt(self, sample_list):
+        batch_size = sample_list.trans_img_0.size(0)
+        device = sample_list.trans_img_0.device
+        xy_offset = torch.zeros(batch_size, self.grid_H * self.grid_W, 2, device=device)
+
+        sampling_grid = torch.cat(
+            [torch.linspace(1, -1, self.grid_W).view(1, self.grid_W, 1).expand(self.grid_H, -1, 1),  # NoQA
+             torch.linspace(1, -1, self.grid_H).view(self.grid_H, 1, 1).expand(-1, self.grid_W, 1)],  # NoQA
+            dim=-1
+        ).unsqueeze(0).expand(batch_size, -1, -1, -1).to(device)
+        # sample ground-truth z-grid from ground-truth depth
+        z_grid = nn.functional.grid_sample(
+            sample_list.depth_0.unsqueeze(1), sampling_grid, padding_mode="border",
+            align_corners=True
+        ).view(batch_size, self.grid_H * self.grid_W, 1)
+
+        return xy_offset, z_grid
+
     def forward(self, sample_list):
-        # use the transformed image (after mean subtraction and normalization) as
-        # network input
-        xy_offset, z_grid = self.offset_and_depth_predictor(sample_list.trans_img_0)
+        if not self.config.fill_z_with_gt:
+            # use the transformed image (after mean subtraction and normalization) as
+            # network input
+            xy_offset, z_grid = self.offset_and_depth_predictor(sample_list.trans_img_0)
+        else:
+            xy_offset, z_grid = self.get_offset_and_depth_from_gt(sample_list)
 
         rendering_results = {}
         if not self.config.train_z_grid_only:

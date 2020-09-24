@@ -36,3 +36,4 @@ model_config:
     save_forward_results: false
     forward_results_dir: save/visualization
     return_rendering_results_only: false
+    fill_z_with_gt: false

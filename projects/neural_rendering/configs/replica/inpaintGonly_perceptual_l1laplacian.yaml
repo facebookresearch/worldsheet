@@ -1,0 +1,17 @@
+includes:
+- ./defaults.yaml
+
+model_config:
+  mesh_renderer:
+    loss_weights:
+      z_grid_l1_0: 200
+      depth_l1_0: 200
+      depth_l1_1: 200
+      image_l1_1: 400
+      vgg19_perceptual_1: 100
+      grid_offset: 20
+      mesh_laplacian: 0.01
+      image_l1_1_inpaint: 400
+      vgg19_perceptual_1_inpaint: 100
+    mesh_laplacian_use_l2_loss: false
+    use_inpainting: true

@@ -8,6 +8,7 @@ from torch import nn
 import timm.models as models
 
 from mmf.neural_rendering.novel_view_projector import NovelViewProjector
+from mmf.neural_rendering.inpainting.models import MeshRGBGenerator
 from mmf.neural_rendering.losses import (
     ImageL1Loss, DepthL1Loss, MeshLaplacianLoss, GridOffsetLoss, ZGridL1Loss,
     VGG19PerceptualLoss
@@ -73,6 +74,9 @@ class MeshRenderer(BaseModel):
             gblur_sigma=self.config.rendering.gblur_sigma,
             gblur_weight_thresh=self.config.rendering.gblur_weight_thresh
         )
+
+        if self.config.use_inpainting:
+            self.inpainting_net_G = MeshRGBGenerator(self.config.inpainting.net_G)
 
         self.build_losses()
 
@@ -151,6 +155,11 @@ class MeshRenderer(BaseModel):
                 T_out_list=[sample_list.T_0, sample_list.T_1]
             )
 
+        if self.config.use_inpainting:
+            _, rgba_1_rec = rendering_results["rgba_out_rec_list"]
+            rgb_1_rec = rgba_1_rec[..., :3]
+            rendering_results["rgb_1_inpaint"] = self.inpainting_net_G(rgb_1_rec)
+
         # return only the rendering results and skip loss computation, usually for
         # visualization on-the-fly by calling this model separately (instead of running
         # it within the MMF trainer on MMF datasets)
@@ -187,6 +196,10 @@ class MeshRenderer(BaseModel):
                 "depth_0_rec": depth_0_rec[n_im],
                 "depth_1_rec": depth_1_rec[n_im],
             }
+            if self.config.use_inpainting:
+                rgb_1_inpaint = rendering_results["rgb_1_inpaint"]
+                save_dict.update({"rgb_1_inpaint": rgb_1_inpaint[n_im]})
+
             save_dict = {k: v.detach().cpu().numpy() for k, v in save_dict.items()}
             np.savez(save_file, **save_dict)
 
@@ -232,6 +245,22 @@ class MeshRenderer(BaseModel):
                 "image_l1_1": image_l1_1,
                 "vgg19_perceptual_1": vgg19_perceptual_1,
                 "mesh_laplacian": self.loss_mesh_laplacian(scaled_verts),
+            })
+
+        if self.config.use_inpainting:
+            rgb_1_inpaint = rendering_results["rgb_1_inpaint"]
+            image_l1_1_inpaint = self.loss_image_l1(
+                rgb_pred=rgb_1_inpaint, rgb_gt=sample_list.orig_img_1,
+            )
+            if self.loss_weights["vgg19_perceptual_1_inpaint"] != 0:
+                vgg19_perceptual_1_inpaint = self.loss_vgg19_perceptual(
+                    rgb_pred=rgb_1_inpaint, rgb_gt=sample_list.orig_img_1,
+                )
+            else:
+                vgg19_perceptual_1_inpaint = torch.tensor(0., device=rgb_1_rec.device)
+            losses_unscaled.update({
+                "image_l1_1_inpaint": image_l1_1_inpaint,
+                "vgg19_perceptual_1_inpaint": vgg19_perceptual_1_inpaint,
             })
 
         for k, v in losses_unscaled.items():

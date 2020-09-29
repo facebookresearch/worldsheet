@@ -9,9 +9,10 @@ class ImageL1Loss(nn.Module):
     def __init__(self):
         super().__init__()
 
-    def forward(self, rgb_pred, rgb_gt, loss_mask):
+    def forward(self, rgb_pred, rgb_gt, loss_mask=None):
         diff = torch.abs(rgb_pred - rgb_gt)
-        diff = diff * loss_mask.unsqueeze(-1)
+        if loss_mask is not None:
+            diff = diff * loss_mask.unsqueeze(-1)
         # averaging over batch, image height and width, but not channels
         l1_loss = torch.mean(diff) * 3  # multiplying by 3 channels
 
@@ -22,9 +23,10 @@ class DepthL1Loss(nn.Module):
     def __init__(self):
         super().__init__()
 
-    def forward(self, depth_pred, depth_gt, loss_mask):
+    def forward(self, depth_pred, depth_gt, loss_mask=None):
         diff = torch.abs(depth_pred - depth_gt)
-        diff = diff * loss_mask
+        if loss_mask is not None:
+            diff = diff * loss_mask
         # averaging over batch, image height and width
         l1_loss = torch.mean(diff)
 
@@ -181,11 +183,12 @@ class VGG19PerceptualLoss(nn.Module):
 
     def preprocess_img(self, imgs, loss_mask):
         imgs = (imgs - self.img_mean) / self.img_std
-        imgs = imgs * loss_mask.unsqueeze(-1)  # mask invalid image regions
+        if loss_mask is not None:
+            imgs = imgs * loss_mask.unsqueeze(-1)  # mask invalid image regions
         imgs = imgs.permute(0, 3, 1, 2)  # NHWC -> NCHW
         return imgs
 
-    def forward(self, rgb_pred, rgb_gt, loss_mask):
+    def forward(self, rgb_pred, rgb_gt, loss_mask=None):
         pred_fs = self.model(self.preprocess_img(rgb_pred, loss_mask))
         gt_fs = self.model(self.preprocess_img(rgb_gt, loss_mask))
 

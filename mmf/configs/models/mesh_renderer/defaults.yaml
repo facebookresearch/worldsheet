@@ -47,3 +47,4 @@ model_config:
         n_downsampling: 3  # pix2pixHD uses 4 downsampling layers in global genenator; but since we have smaller input size, let's just use 3 here
         n_blocks: 9
         norm: instance
+        use_alpha_input: false  # kept for backward compatibility

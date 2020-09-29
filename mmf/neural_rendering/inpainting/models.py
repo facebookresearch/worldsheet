@@ -14,8 +14,10 @@ class MeshRGBGenerator(nn.Module):
         self.register_buffer("img_mean", img_mean)
         self.register_buffer("img_std", img_std)
 
+        self.use_alpha_input = G_cfg.use_alpha_input
+
         self.netG = GlobalGenerator(
-            input_nc=3,
+            input_nc=(4 if self.use_alpha_input else 3),
             output_nc=3,
             ngf=G_cfg.ngf,
             n_downsampling=G_cfg.n_downsampling,
@@ -23,8 +25,13 @@ class MeshRGBGenerator(nn.Module):
             norm_layer=get_norm_layer(norm_type=G_cfg.norm)
         )
 
-    def forward(self, imgs):
-        imgs = (imgs - self.img_mean) / self.img_std
+    def forward(self, imgs_in):
+        assert imgs_in.size(-1) == 4
+        imgs = (imgs_in[..., :3] - self.img_mean) / self.img_std
+        if self.use_alpha_input:
+            alpha = imgs_in[..., -1].unsqueeze(-1)
+            alpha_mask = alpha.ge(1e-4).float()
+            imgs = torch.cat([imgs, alpha_mask], dim=-1)
         imgs = imgs.permute(0, 3, 1, 2)  # NHWC -> NCHW
 
         outs = self.netG(imgs)

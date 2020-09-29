@@ -157,8 +157,7 @@ class MeshRenderer(BaseModel):
 
         if self.config.use_inpainting:
             _, rgba_1_rec = rendering_results["rgba_out_rec_list"]
-            rgb_1_rec = rgba_1_rec[..., :3]
-            rendering_results["rgb_1_inpaint"] = self.inpainting_net_G(rgb_1_rec)
+            rendering_results["rgb_1_inpaint"] = self.inpainting_net_G(rgba_1_rec)
 
         # return only the rendering results and skip loss computation, usually for
         # visualization on-the-fly by calling this model separately (instead of running

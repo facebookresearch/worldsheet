@@ -44,9 +44,14 @@ model_config:
     sanity_check_inpaint_with_gt: false
     inpainting:
       net_G:
-        ngf: 32
+        ngf: 64
         n_downsampling: 3  # pix2pixHD uses 4 downsampling layers in global genenator; but since we have smaller input size, let's just use 3 here
         n_blocks: 9
         norm: instance
         use_alpha_input: false  # kept for backward compatibility
         generate_img_residual: false
+        inv_mean_std_transform_in_output: false
+        optimizer:
+          lr: 2e-4  # same as in pix2pixHD
+          beta1: 0.5  # same as in pix2pixHD
+          weight_decay: 0.  # same as in pix2pixHD

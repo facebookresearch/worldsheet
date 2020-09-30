@@ -97,24 +97,36 @@ class MeshRenderer(BaseModel):
         self.loss_weights = self.config.loss_weights
 
     def get_optimizer_parameters(self, config):
+        param_groups = []
+        registered = set()
+
+        # 1. backbone for ResNet-50
         backbone_params = [
             p for n, p in self.named_parameters() if p.requires_grad and 'backbone' in n
         ]
-        head_params = [
-            p for n, p in self.named_parameters() if p.requires_grad and 'backbone' not in n
-        ]
-        logger.info(
-            f"Got {len(backbone_params)} backbone parameters "
-            f"and {len(head_params)} head parameters. "
-            f"Applying {self.config.backbone_lr} lr on backbone parameters."
-        )
+        param_groups.append({"params": backbone_params, "lr": self.config.backbone_lr})
+        registered.update(backbone_params)
 
-        params = [
-            {"params": head_params},
-            {"params": backbone_params, "lr": self.config.backbone_lr},
-        ]
+        # 2. inpainting generator
+        if self.config.use_inpainting:
+            generator_params = [
+                p for p in self.inpainting_net_G.parameters() if p.requires_grad
+            ]
+            param_groups.append({
+                "params": generator_params,
+                "lr": self.config.inpainting.net_G.optimizer.lr,
+                "betas": (self.config.inpainting.net_G.optimizer.beta1, 0.999),
+                "weight_decay": self.config.inpainting.net_G.optimizer.weight_decay,
+            })
+            registered.update(generator_params)
 
-        return params
+        # All remaining parameters
+        remaining_params = [
+            p for p in self.parameters() if p.requires_grad and p not in registered
+        ]
+        param_groups.insert(0, {"params": remaining_params})
+
+        return param_groups
 
     def get_offset_and_depth_from_gt(self, sample_list):
         batch_size = sample_list.trans_img_0.size(0)

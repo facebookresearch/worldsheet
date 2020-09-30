@@ -38,7 +38,8 @@ class MeshRGBGenerator(nn.Module):
         outs = self.netG(imgs)
 
         outs = outs.permute(0, 2, 3, 1)  # NCHW -> NHWC
-        outs = outs * self.img_std + self.img_mean
         if self.G_cfg.generate_img_residual:
             outs = outs + imgs_in[..., :3]
+        elif self.G_cfg.inv_mean_std_transform_in_output:
+            outs = outs * self.img_std + self.img_mean
         return outs

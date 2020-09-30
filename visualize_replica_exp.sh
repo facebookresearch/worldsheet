@@ -1,7 +1,7 @@
 EXP_NAME=$1
 ARGS=$2
 
-mmf_run config=projects/neural_rendering/configs/replica/${EXP_NAME}.yaml \
+python mmf_cli/run.py config=projects/neural_rendering/configs/replica/${EXP_NAME}.yaml \
     datasets=replica \
     model=mesh_renderer \
     env.save_dir=./save/replica/${EXP_NAME} \
@@ -9,7 +9,7 @@ mmf_run config=projects/neural_rendering/configs/replica/${EXP_NAME}.yaml \
     model_config.mesh_renderer.forward_results_dir=save/visualization/${EXP_NAME}/train \
     checkpoint.resume=True checkpoint.resume_best=True run_type=val ${ARGS}
 
-mmf_run config=projects/neural_rendering/configs/replica/${EXP_NAME}.yaml \
+python mmf_cli/run.py config=projects/neural_rendering/configs/replica/${EXP_NAME}.yaml \
     datasets=replica \
     model=mesh_renderer \
     env.save_dir=./save/replica/${EXP_NAME} \

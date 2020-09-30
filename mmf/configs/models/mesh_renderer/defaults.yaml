@@ -35,6 +35,8 @@ model_config:
       mesh_laplacian: 0.01
       image_l1_1_inpaint: 0.  # kept for backward compatibility
       vgg19_perceptual_1_inpaint: 0.  # kept for backward compatibility
+      gan: 0.  # kept for backward compatibility
+      gan_feat: 0.  # kept for backward compatibility
     save_forward_results: false
     forward_results_dir: save/visualization
     return_rendering_results_only: false
@@ -55,3 +57,17 @@ model_config:
           lr: 2e-4  # same as in pix2pixHD
           beta1: 0.5  # same as in pix2pixHD
           weight_decay: 0.  # same as in pix2pixHD
+      use_discriminator: false  # kept for backward compatibility
+      net_D:
+        ndf: 64
+        n_layers: 3
+        norm: instance
+        no_lsgan: false
+        no_ganFeat_loss: false
+        num_D: 2
+        lambda_feat: 10.0
+        optimizer:
+          lr: 2e-4
+          beta1: 0.5
+        use_lr_scheduler: ${training.lr_scheduler}
+        scheduler: ${scheduler}

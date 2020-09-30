@@ -9,6 +9,7 @@ import timm.models as models
 
 from mmf.neural_rendering.novel_view_projector import NovelViewProjector
 from mmf.neural_rendering.inpainting.models import MeshRGBGenerator
+from mmf.neural_rendering.inpainting.gan_loss import MeshGANLosses
 from mmf.neural_rendering.losses import (
     ImageL1Loss, DepthL1Loss, MeshLaplacianLoss, GridOffsetLoss, ZGridL1Loss,
     VGG19PerceptualLoss
@@ -75,8 +76,12 @@ class MeshRenderer(BaseModel):
             gblur_weight_thresh=self.config.rendering.gblur_weight_thresh
         )
 
+        self.use_discriminator = False
         if self.config.use_inpainting:
             self.inpainting_net_G = MeshRGBGenerator(self.config.inpainting.net_G)
+            if self.config.inpainting.use_discriminator:
+                self.mesh_gan_losses = MeshGANLosses(self.config.inpainting.net_D)
+                self.use_discriminator = True
 
         self.build_losses()
 
@@ -96,13 +101,37 @@ class MeshRenderer(BaseModel):
 
         self.loss_weights = self.config.loss_weights
 
+    def state_dict(self, *args, **kwargs):
+        full_state_dict = super().state_dict(*args, **kwargs)
+        if self.use_discriminator and self.mesh_gan_losses.is_optimizer_initialized:
+            full_state_dict["discriminator_optimizer"] = \
+                self.mesh_gan_losses.optimizer_and_scheduler_state_dict()
+        return full_state_dict
+
+    def load_state_dict(self, state_dict, *args, **kwargs):
+        if self.use_discriminator:
+            self.mesh_gan_losses.load_optimizer_and_scheduler_state_dict(
+                state_dict.pop("discriminator_optimizer")
+            )
+        return super().load_state_dict(state_dict, *args, **kwargs)
+
     def get_optimizer_parameters(self, config):
+        # exclude all the parameters in the discriminator (they are handled
+        # in a separate optimizer within self.mesh_gan_losses)
+        params_to_exclude = set()
+        if self.use_discriminator:
+            params_to_exclude = set(self.mesh_gan_losses.parameters())
+        named_parameters = [
+            (n, p) for n, p in self.named_parameters()
+            if p.requires_grad and p not in params_to_exclude
+        ]
+
         param_groups = []
         registered = set()
 
         # 1. backbone for ResNet-50
         backbone_params = [
-            p for n, p in self.named_parameters() if p.requires_grad and 'backbone' in n
+            p for n, p in named_parameters if 'backbone' in n
         ]
         param_groups.append({"params": backbone_params, "lr": self.config.backbone_lr})
         registered.update(backbone_params)
@@ -122,7 +151,7 @@ class MeshRenderer(BaseModel):
 
         # All remaining parameters
         remaining_params = [
-            p for p in self.parameters() if p.requires_grad and p not in registered
+            p for _, p in named_parameters if p not in registered
         ]
         param_groups.insert(0, {"params": remaining_params})
 
@@ -278,6 +307,13 @@ class MeshRenderer(BaseModel):
                 "image_l1_1_inpaint": image_l1_1_inpaint,
                 "vgg19_perceptual_1_inpaint": vgg19_perceptual_1_inpaint,
             })
+
+            if self.use_discriminator:
+                g_losses = self.mesh_gan_losses(
+                    fake_img=rgb_1_inpaint, real_img=sample_list.orig_img_1,
+                    update_discriminator=self.training
+                )
+                losses_unscaled.update(g_losses)
 
         for k, v in losses_unscaled.items():
             if not torch.all(torch.isfinite(v)).item():

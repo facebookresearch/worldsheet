@@ -49,3 +49,4 @@ model_config:
         n_blocks: 9
         norm: instance
         use_alpha_input: false  # kept for backward compatibility
+        generate_img_residual: false

@@ -6,6 +6,7 @@ from .pix2pix_networks import GlobalGenerator, get_norm_layer
 class MeshRGBGenerator(nn.Module):
     def __init__(self, G_cfg):
         super().__init__()
+        self.G_cfg = G_cfg
         # mean and std from https://pytorch.org/docs/stable/torchvision/models.html
         # they are different from the (0.5, 0.5, 0.5) mean and std in pix2pixHD
         # but should be fine if used consistently
@@ -38,4 +39,6 @@ class MeshRGBGenerator(nn.Module):
 
         outs = outs.permute(0, 2, 3, 1)  # NCHW -> NHWC
         outs = outs * self.img_std + self.img_mean
+        if self.G_cfg.generate_img_residual:
+            outs = outs + imgs_in[..., :3]
         return outs

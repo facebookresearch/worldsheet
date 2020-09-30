@@ -17,6 +17,7 @@ scheduler:
     warmup_factor: 0.25
 
 training:
+  num_workers: 2
   clip_norm_mode: all
   clip_gradients: true
   max_grad_l2_norm: 5

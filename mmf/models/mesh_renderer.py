@@ -157,6 +157,11 @@ class MeshRenderer(BaseModel):
 
         if self.config.use_inpainting:
             _, rgba_1_rec = rendering_results["rgba_out_rec_list"]
+            if self.config.sanity_check_inpaint_with_gt:
+                # as a sanity check, use the ground-truth image as input to make sure
+                # the generator has enough capacity to perfectly reconstruct it.
+                rgba_1_rec = torch.ones_like(rgba_1_rec)
+                rgba_1_rec[..., :3] = sample_list.orig_img_1
             rendering_results["rgb_1_inpaint"] = self.inpainting_net_G(rgba_1_rec)
 
         # return only the rendering results and skip loss computation, usually for

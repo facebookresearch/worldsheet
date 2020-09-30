@@ -41,6 +41,7 @@ model_config:
     fill_z_with_gt: false
     # the inpainting network
     use_inpainting: false
+    sanity_check_inpaint_with_gt: false
     inpainting:
       net_G:
         ngf: 32

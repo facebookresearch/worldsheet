@@ -128,6 +128,7 @@ class MeshGANLosses(nn.Module):
     def forward(self, fake_img, real_img, update_discriminator):
         self._init_optimizer_and_scheduler()
         if update_discriminator:
+            assert self.training
             # we'll step discriminator first, as it is easier to make
             # discriminator a module
             self.optimizer_D.zero_grad()
@@ -136,6 +137,9 @@ class MeshGANLosses(nn.Module):
             self.optimizer_D.step()
             if self.lr_scheduler_D is not None:
                 self.lr_scheduler_D.step()
+        else:
+            with torch.no_grad():
+                d_losses = self.compute_discrimator_loss(fake_img, real_img)
 
         g_losses = self.compute_generator_loss(fake_img, real_img)
         # also put in the no-gradient version of the discriminator losses

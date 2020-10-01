@@ -37,6 +37,8 @@ model_config:
       vgg19_perceptual_1_inpaint: 0.  # kept for backward compatibility
       gan: 0.  # kept for backward compatibility
       gan_feat: 0.  # kept for backward compatibility
+      no_grad_d_fake: 1  # no_grad_d_fake and no_grad_d_real are just for logging purposes; they are not back-propagated
+      no_grad_d_real: 1
     save_forward_results: false
     forward_results_dir: save/visualization
     return_rendering_results_only: false

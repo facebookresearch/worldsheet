@@ -138,6 +138,11 @@ class MeshGANLosses(nn.Module):
                 self.lr_scheduler_D.step()
 
         g_losses = self.compute_generator_loss(fake_img, real_img)
+        # also put in the no-gradient version of the discriminator losses
+        # so that they can be displayed in the training log
+        g_losses.update(
+            {f"no_grad_{k}": v.clone().detach() for k, v in d_losses.items()}
+        )
         return g_losses
 
 

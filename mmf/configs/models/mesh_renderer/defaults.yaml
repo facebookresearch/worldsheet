@@ -53,8 +53,10 @@ model_config:
         n_blocks: 9
         norm: instance
         use_alpha_input: false  # kept for backward compatibility
-        generate_img_residual: false
-        inv_mean_std_transform_in_output: false
+        # Since we often need to generate images that are entirely
+        # black or white, let's give it a bit additional output range to (-0.05, 1.05).
+        # The range is constrained by the last Tanh layer in the generator network.
+        img_out_scaling: 0.55
         optimizer:
           lr: 2e-4  # same as in pix2pixHD
           beta1: 0.5  # same as in pix2pixHD

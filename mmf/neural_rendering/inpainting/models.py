@@ -7,11 +7,9 @@ class MeshRGBGenerator(nn.Module):
     def __init__(self, G_cfg):
         super().__init__()
         self.G_cfg = G_cfg
-        # mean and std from https://pytorch.org/docs/stable/torchvision/models.html
-        # they are different from the (0.5, 0.5, 0.5) mean and std in pix2pixHD
-        # but should be fine if used consistently
-        img_mean = torch.tensor([0.485, 0.456, 0.406], dtype=torch.float32)
-        img_std = torch.tensor([0.229, 0.224, 0.225], dtype=torch.float32)
+        # same as in pix2pixHD
+        img_mean = torch.tensor([0.5, 0.5, 0.5], dtype=torch.float32)
+        img_std = torch.tensor([0.5, 0.5, 0.5], dtype=torch.float32)
         self.register_buffer("img_mean", img_mean)
         self.register_buffer("img_std", img_std)
 
@@ -30,16 +28,14 @@ class MeshRGBGenerator(nn.Module):
         assert imgs_in.size(-1) == 4
         imgs = (imgs_in[..., :3] - self.img_mean) / self.img_std
         if self.use_alpha_input:
-            alpha = imgs_in[..., -1].unsqueeze(-1)
-            alpha_mask = alpha.ge(1e-4).float()
+            alpha_mask = imgs_in[..., -1].unsqueeze(-1).ge(1e-4).float()
             imgs = torch.cat([imgs, alpha_mask], dim=-1)
-        imgs = imgs.permute(0, 3, 1, 2)  # NHWC -> NCHW
 
-        outs = self.netG(imgs)
+        # NHWC -> NCHW  -> NHWC
+        # outs is in range -1 to +1 as constrained by Tanh in netG
+        outs = self.netG(imgs.permute(0, 3, 1, 2)).permute(0, 2, 3, 1)
 
-        outs = outs.permute(0, 2, 3, 1)  # NCHW -> NHWC
-        if self.G_cfg.generate_img_residual:
-            outs = outs + imgs_in[..., :3]
-        elif self.G_cfg.inv_mean_std_transform_in_output:
-            outs = outs * self.img_std + self.img_mean
-        return outs
+        # we output in the original float-point image RGB range 0~1,
+        # to be compatible with the mesh rendering results
+        imgs_out = outs * self.G_cfg.img_out_scaling + 0.5
+        return imgs_out

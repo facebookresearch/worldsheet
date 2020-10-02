@@ -153,11 +153,9 @@ class MeshGANLosses(nn.Module):
 class MeshRGBDiscriminator(nn.Module):
     def __init__(self, D_cfg):
         super().__init__()
-        # mean and std from https://pytorch.org/docs/stable/torchvision/models.html
-        # they are different from the (0.5, 0.5, 0.5) mean and std in pix2pixHD
-        # but should be fine if used consistently
-        img_mean = torch.tensor([0.485, 0.456, 0.406], dtype=torch.float32)
-        img_std = torch.tensor([0.229, 0.224, 0.225], dtype=torch.float32)
+        # same as in pix2pixHD
+        img_mean = torch.tensor([0.5, 0.5, 0.5], dtype=torch.float32)
+        img_std = torch.tensor([0.5, 0.5, 0.5], dtype=torch.float32)
         self.register_buffer("img_mean", img_mean)
         self.register_buffer("img_std", img_std)
 

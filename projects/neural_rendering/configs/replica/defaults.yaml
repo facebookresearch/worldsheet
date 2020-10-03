@@ -4,7 +4,6 @@ optimizer:
     lr: 1e-4
     eps: 1e-8
     weight_decay: 1e-5
-  allow_unused_parameters: ${model_config.mesh_renderer.inpainting.use_discriminator}
 
 scheduler:
   type: multi_step
@@ -25,7 +24,8 @@ training:
   lr_scheduler: true
   max_updates: 30000
   checkpoint_interval: 5000
-  evaluation_interval: 10000000  # don't evaluate
+  evaluation_interval: 5000
+  log_interval: 20
   batch_size: 64
   early_stop:
     enabled: false

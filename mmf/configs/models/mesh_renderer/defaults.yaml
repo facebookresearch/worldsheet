@@ -12,7 +12,7 @@ model_config:
     backbone_dim: 2048
     backbone_lr: 1e-4  # might be too high; kept for backward compatibility
     rendering:
-      blur_radius: 1e-6
+      blur_radius: 1e-8
       faces_per_pixel: 10
       clip_barycentric_coords: false
       hfov: 90
@@ -73,5 +73,4 @@ model_config:
         optimizer:
           lr: 2e-4
           beta1: 0.5
-        use_lr_scheduler: ${training.lr_scheduler}
-        scheduler: ${scheduler}
+          weight_decay: 0.  # same as in pix2pixHD

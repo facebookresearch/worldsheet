@@ -1,9 +1,7 @@
 import logging
-from copy import deepcopy
 import torch
 from torch import nn
 from .pix2pix_networks import GANLoss, MultiscaleDiscriminator, get_norm_layer
-from mmf.utils.build import build_scheduler
 
 
 logger = logging.getLogger(__name__)
@@ -11,8 +9,6 @@ logger = logging.getLogger(__name__)
 
 class MeshGANLosses(nn.Module):
     # Adapted from SynSin's codebase
-    # it holds a discriminator model and its optimizer, and implements all the interface
-    # for discriminator stepping.
 
     def __init__(self, D_cfg):
         super().__init__()
@@ -21,54 +17,7 @@ class MeshGANLosses(nn.Module):
         self.criterionGAN = GANLoss(use_lsgan=not D_cfg.no_lsgan)
         self.criterionFeat = torch.nn.L1Loss()
 
-        # we'll hold off the optimizer (and lr scheduler) initialization
-        # until the beginning of the first forward pass or restoration
-        # from checkpoint, where the model has been moved to the proper device
-        # and wrapped by DistributedDataParallel
-        self.is_optimizer_initialized = False
-        self.optimizer_state_dict_to_load = None
-
-    def _init_optimizer_and_scheduler(self):
-        if self.is_optimizer_initialized:
-            return
-        self.optimizer_D = torch.optim.Adam(
-            list(self.model.parameters()),
-            lr=self.D_cfg.optimizer.lr, betas=(self.D_cfg.optimizer.beta1, 0.999)
-        )
-
-        self.lr_scheduler_D = None
-        if self.D_cfg.use_lr_scheduler:
-            self.lr_scheduler_D = build_scheduler(self.optimizer_D, self.D_cfg)
-
-        logger.info("Optimizer and LR Scheduler are initialized in MeshGANLosses")
-        self.is_optimizer_initialized = True
-
-        if self.optimizer_state_dict_to_load is not None:
-            self._load_optimizer_and_scheduler_state_dict(
-                self.optimizer_state_dict_to_load
-            )
-            self.optimizer_state_dict_to_load = None
-
-    def optimizer_and_scheduler_state_dict(self):
-        assert self.is_optimizer_initialized
-        state_dict = {"optimizer_D": self.optimizer_D.state_dict()}
-        if self.lr_scheduler_D is not None:
-            state_dict["lr_scheduler_D"] = self.lr_scheduler_D.state_dict()
-        return state_dict
-
-    def load_optimizer_and_scheduler_state_dict(self, state_dict):
-        assert self.optimizer_state_dict_to_load is None
-        if self.is_optimizer_initialized:
-            self._load_optimizer_and_scheduler_state_dict(self, state_dict)
-        else:
-            # if optimizer has not been initialized yet,
-            # hold the state dict and load it later during initialization
-            self.optimizer_state_dict_to_load = deepcopy(state_dict)
-
-    def _load_optimizer_and_scheduler_state_dict(self, state_dict):
-        self.optimizer_D.load_state_dict(state_dict["optimizer_D"])
-        if self.lr_scheduler_D is not None:
-            self.lr_scheduler_D.load_state_dict(state_dict["lr_scheduler_D"])
+        self._trainable_params = [p for p in self.model.parameters() if p.requires_grad]
 
     def _discriminate(self, fake_image, real_image):
         # Given fake and real image, return the prediction of discriminator
@@ -126,21 +75,21 @@ class MeshGANLosses(nn.Module):
         return d_losses
 
     def forward(self, fake_img, real_img, update_discriminator):
-        self._init_optimizer_and_scheduler()
+        # self._debug_print_param()
+
+        # accumulate discriminator loss' gradients in discriminator parameters
         if update_discriminator:
-            assert self.training
-            # we'll step discriminator first, as it is easier to make
-            # discriminator a module
-            self.optimizer_D.zero_grad()
+            self._turn_on_param_grad()
             d_losses = self.compute_discrimator_loss(fake_img, real_img)
             sum(d_losses.values()).mean().backward()
-            self.optimizer_D.step()
-            if self.lr_scheduler_D is not None:
-                self.lr_scheduler_D.step()
         else:
             with torch.no_grad():
                 d_losses = self.compute_discrimator_loss(fake_img, real_img)
 
+        # we do not want generator loss' gradients to be accumulated in
+        # discriminator parameters; turn off their requires_grad flag
+        # so that autograd won't populate their gradients
+        self._turn_off_param_grad()
         g_losses = self.compute_generator_loss(fake_img, real_img)
         # also put in the no-gradient version of the discriminator losses
         # so that they can be displayed in the training log
@@ -148,6 +97,26 @@ class MeshGANLosses(nn.Module):
             {f"no_grad_{k}": v.clone().detach() for k, v in d_losses.items()}
         )
         return g_losses
+
+    def _turn_off_param_grad(self):
+        for p in self._trainable_params:
+            p.requires_grad = False
+
+    def _turn_on_param_grad(self):
+        for p in self._trainable_params:
+            p.requires_grad = True
+
+    def _debug_print_param(self):
+        # print a parameter to see if all GPUs have the same parameters
+        # (if they don't, then there is a bug in distributed training)
+        from mmf.utils.distributed import get_rank
+        if not hasattr(self, '_rank'):
+            self._rank = get_rank()
+            self._iter = 0
+        p = self._trainable_params[0]
+        d = p.data.view(-1)[:20]
+        print(f"iter: {self._iter}, rank: {self._rank}, param: {str(d)}", force=True)
+        self._iter += 1
 
 
 class MeshRGBDiscriminator(nn.Module):

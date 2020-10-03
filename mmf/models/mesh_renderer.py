@@ -101,46 +101,21 @@ class MeshRenderer(BaseModel):
 
         self.loss_weights = self.config.loss_weights
 
-    def state_dict(self, *args, **kwargs):
-        full_state_dict = super().state_dict(*args, **kwargs)
-        if self.use_discriminator and self.mesh_gan_losses.is_optimizer_initialized:
-            full_state_dict["discriminator_optimizer"] = \
-                self.mesh_gan_losses.optimizer_and_scheduler_state_dict()
-        return full_state_dict
-
-    def load_state_dict(self, state_dict, *args, **kwargs):
-        if self.use_discriminator:
-            self.mesh_gan_losses.load_optimizer_and_scheduler_state_dict(
-                state_dict.pop("discriminator_optimizer")
-            )
-        return super().load_state_dict(state_dict, *args, **kwargs)
-
     def get_optimizer_parameters(self, config):
-        # exclude all the parameters in the discriminator (they are handled
-        # in a separate optimizer within self.mesh_gan_losses)
-        params_to_exclude = set()
-        if self.use_discriminator:
-            params_to_exclude = set(self.mesh_gan_losses.parameters())
-        named_parameters = [
-            (n, p) for n, p in self.named_parameters()
-            if p.requires_grad and p not in params_to_exclude
-        ]
+        # named_parameters contains ALL parameters, including those in discriminator
+        named_parameters = [(n, p) for n, p in self.named_parameters()]
 
         param_groups = []
         registered = set()
 
         # 1. backbone for ResNet-50
-        backbone_params = [
-            p for n, p in named_parameters if 'backbone' in n
-        ]
+        backbone_params = list(self.offset_and_depth_predictor.backbone.parameters())
         param_groups.append({"params": backbone_params, "lr": self.config.backbone_lr})
         registered.update(backbone_params)
 
         # 2. inpainting generator
         if self.config.use_inpainting:
-            generator_params = [
-                p for p in self.inpainting_net_G.parameters() if p.requires_grad
-            ]
+            generator_params = list(self.inpainting_net_G.parameters())
             param_groups.append({
                 "params": generator_params,
                 "lr": self.config.inpainting.net_G.optimizer.lr,
@@ -148,6 +123,17 @@ class MeshRenderer(BaseModel):
                 "weight_decay": self.config.inpainting.net_G.optimizer.weight_decay,
             })
             registered.update(generator_params)
+
+        # 3. inpainting discriminator
+        if self.use_discriminator:
+            discriminator_params = list(self.mesh_gan_losses.parameters())
+            param_groups.append({
+                "params": discriminator_params,
+                "lr": self.config.inpainting.net_D.optimizer.lr,
+                "betas": (self.config.inpainting.net_D.optimizer.beta1, 0.999),
+                "weight_decay": self.config.inpainting.net_D.optimizer.weight_decay,
+            })
+            registered.update(discriminator_params)
 
         # All remaining parameters
         remaining_params = [

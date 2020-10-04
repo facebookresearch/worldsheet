@@ -85,6 +85,7 @@ class MeshGANLosses(nn.Module):
         else:
             with torch.no_grad():
                 d_losses = self.compute_discrimator_loss(fake_img, real_img)
+        self._debug_log_d_losses(d_losses)
 
         # we do not want generator loss' gradients to be accumulated in
         # discriminator parameters; turn off their requires_grad flag
@@ -117,6 +118,14 @@ class MeshGANLosses(nn.Module):
         d = p.data.view(-1)[:20]
         print(f"iter: {self._iter}, rank: {self._rank}, param: {str(d)}", force=True)
         self._iter += 1
+
+    def _debug_log_d_losses(self, d_losses):
+        if not hasattr(self, '_print_count'):
+            self._print_count = 0
+        if self._print_count % 5 == 0 or (not self.training):
+            msg = {k: v.item() for k, v in d_losses.items()}
+            logger.info(f"{'TRAIN' if self.training else 'EVAL'} d_losses: {msg}")
+        self._print_count += 1
 
 
 class MeshRGBDiscriminator(nn.Module):

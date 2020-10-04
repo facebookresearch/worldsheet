@@ -230,6 +230,9 @@ distributed:
     # Set if you do not want spawn multiple processes even if
     # multiple GPUs are visible
     no_spawn: false
+    # Whether to convert batch normalization to synchronized batch normalization
+    # See https://pytorch.org/docs/stable/generated/torch.nn.SyncBatchNorm.html for details
+    convert_bn_to_sync_bn: false
 
 # Configuration for checkpointing including resuming and loading pretrained models
 checkpoint:

@@ -51,6 +51,8 @@ class TrainerDeviceMixin(ABC):
 
         if "cuda" in str(self.device) and self.distributed:
             registry.register("distributed", True)
+            if self.config.distributed.convert_bn_to_sync_bn:
+                self.model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(self.model)
             self.model = torch.nn.parallel.DistributedDataParallel(
                 self.model,
                 device_ids=[self.local_rank],

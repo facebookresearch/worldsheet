@@ -15,7 +15,7 @@ dataset_config:
         val:
         - diode_45fov_256x256_outdoor/defaults/annotations/imdb_val.npy
         test:
-        - diode_45fov_256x256_outdoor/defaults/annotations/imdb_val.npy
+        - diode_45fov_256x256_outdoor/defaults/annotations/imdb_mini_train.npy
     processors:
       image_processor:
         type: torchvision_transforms

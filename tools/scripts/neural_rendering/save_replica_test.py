@@ -18,7 +18,7 @@ def make_config(
     config.TASK.NAME = "Nav-v0"
     config.TASK.MEASUREMENTS = []
     config.DATASET.SPLIT = split
-    config.DATASET.DATA_PATH = data_path
+    config.DATASET.POINTNAVV1.DATA_PATH = data_path
     config.DATASET.SCENES_DIR = scenes_dir
     config.HEIGHT = resolution
     config.WIDTH = resolution

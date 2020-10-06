@@ -19,7 +19,7 @@ class MeshGANLosses(nn.Module):
 
         self._trainable_params = [p for p in self.model.parameters() if p.requires_grad]
 
-    def _discriminate(self, fake_image, real_image):
+    def _discriminate(self, fake_image, real_image, alpha_mask):
         # Given fake and real image, return the prediction of discriminator
         # for each fake and real image.
         # In Batch Normalization, the fake and real images are
@@ -27,7 +27,8 @@ class MeshGANLosses(nn.Module):
         # statistics in fake and real images.
         # So both fake and real images are fed to D all at once.
         fake_and_real = torch.cat([fake_image, real_image], dim=0)
-        discriminator_out = self.model(fake_and_real)
+        fake_and_real_mask = torch.cat([alpha_mask, alpha_mask], dim=0)
+        discriminator_out = self.model(fake_and_real, fake_and_real_mask)
         pred_fake, pred_real = self._divide_pred(discriminator_out)
         return pred_fake, pred_real
 
@@ -45,8 +46,8 @@ class MeshGANLosses(nn.Module):
 
         return fake, real
 
-    def compute_generator_loss(self, fake_img, real_img):
-        pred_fake, pred_real = self._discriminate(fake_img, real_img)
+    def compute_generator_loss(self, fake_img, real_img, alpha_mask):
+        pred_fake, pred_real = self._discriminate(fake_img, real_img, alpha_mask)
 
         g_losses = {}
         g_losses["gan"] = self.criterionGAN(pred_fake, True)
@@ -65,8 +66,10 @@ class MeshGANLosses(nn.Module):
 
         return g_losses
 
-    def compute_discrimator_loss(self, fake_img, real_img):
-        pred_fake, pred_real = self._discriminate(fake_img.detach(), real_img.detach())
+    def compute_discrimator_loss(self, fake_img, real_img, alpha_mask):
+        pred_fake, pred_real = self._discriminate(
+            fake_img.detach(), real_img.detach(), alpha_mask.detach()
+        )
 
         d_losses = {
             "d_fake": self.criterionGAN(pred_fake, False),
@@ -74,24 +77,24 @@ class MeshGANLosses(nn.Module):
         }
         return d_losses
 
-    def forward(self, fake_img, real_img, update_discriminator):
+    def forward(self, fake_img, real_img, alpha_mask, update_discriminator):
         # self._debug_print_param()
 
         # accumulate discriminator loss' gradients in discriminator parameters
         if update_discriminator:
             self._turn_on_param_grad()
-            d_losses = self.compute_discrimator_loss(fake_img, real_img)
+            d_losses = self.compute_discrimator_loss(fake_img, real_img, alpha_mask)
             sum(d_losses.values()).mean().backward()
         else:
             with torch.no_grad():
-                d_losses = self.compute_discrimator_loss(fake_img, real_img)
+                d_losses = self.compute_discrimator_loss(fake_img, real_img, alpha_mask)
         self._debug_log_d_losses(d_losses)
 
         # we do not want generator loss' gradients to be accumulated in
         # discriminator parameters; turn off their requires_grad flag
         # so that autograd won't populate their gradients
         self._turn_off_param_grad()
-        g_losses = self.compute_generator_loss(fake_img, real_img)
+        g_losses = self.compute_generator_loss(fake_img, real_img, alpha_mask)
         # also put in the no-gradient version of the discriminator losses
         # so that they can be displayed in the training log
         g_losses.update(
@@ -137,8 +140,10 @@ class MeshRGBDiscriminator(nn.Module):
         self.register_buffer("img_mean", img_mean)
         self.register_buffer("img_std", img_std)
 
+        self.use_alpha_input = D_cfg.use_alpha_input
+
         self.netD = MultiscaleDiscriminator(
-            input_nc=3,
+            input_nc=(4 if self.use_alpha_input else 3),
             ndf=D_cfg.ndf,
             n_layers=D_cfg.n_layers,
             norm_layer=get_norm_layer(norm_type=D_cfg.norm),
@@ -147,11 +152,12 @@ class MeshRGBDiscriminator(nn.Module):
             getIntermFeat=not D_cfg.no_ganFeat_loss
         )
 
-    def forward(self, imgs_in):
+    def forward(self, imgs_in, alpha_mask):
         assert imgs_in.size(-1) == 3
         imgs = (imgs_in - self.img_mean) / self.img_std
-        imgs = imgs.permute(0, 3, 1, 2)  # NHWC -> NCHW
+        if self.use_alpha_input:
+            imgs = torch.cat([imgs, alpha_mask], dim=-1)
 
-        result = self.netD(imgs)
+        result = self.netD(imgs.permute(0, 3, 1, 2))
 
         return result

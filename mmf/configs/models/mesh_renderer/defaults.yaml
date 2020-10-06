@@ -67,6 +67,7 @@ model_config:
         ndf: 64
         n_layers: 3
         norm: instance
+        use_alpha_input: false  # kept for backward compatibility
         no_lsgan: false
         no_ganFeat_loss: false
         num_D: 2

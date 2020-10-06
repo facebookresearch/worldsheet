@@ -298,6 +298,7 @@ class MeshRenderer(BaseModel):
             if self.use_discriminator:
                 g_losses = self.mesh_gan_losses(
                     fake_img=rgb_1_inpaint, real_img=sample_list.orig_img_1,
+                    alpha_mask=rgba_1_rec[..., 3:4].ge(1e-4).float(),
                     update_discriminator=self.training
                 )
                 losses_unscaled.update(g_losses)

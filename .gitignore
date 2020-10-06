@@ -1,0 +1,8 @@
+*.pyc
+modelcheckpoints/*
+*-checkpoint.ipynb
+.vscode/*
+dumped*/*
+test_results*/*
+results*/*
+logging/*

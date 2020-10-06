@@ -153,7 +153,7 @@ class ArgumentParser:
         dataset_params.add_argument(
             "--config",
             type=str,
-            default="/private/home/ow045820/projects/habitat/habitat-api/configs/tasks/pointnav_rgbd.yaml",
+            default="/private/home/ronghanghu/workspace/habitat-api/configs/tasks/pointnav_rgbd.yaml",
         )
         dataset_params.add_argument(
             "--current_episode_train", type=int, default=-1
@@ -276,7 +276,7 @@ class ArgumentParser:
         training.add_argument(
             "--log-dir",
             type=str,
-            default="/checkpoint/ow045820/logging/viewsynthesis3d/%s/",
+            default="/private/home/ronghanghu/workspace/synsin/logging/viewsynthesis3d/%s/",
         )
 
         training.add_argument("--batch-size", type=int, default=16)

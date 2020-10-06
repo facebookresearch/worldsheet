@@ -23,46 +23,46 @@ def get_dataset(opt):
     print("Loading dataset %s ..." % opt.dataset)
     if opt.dataset == "mp3d":
         opt.train_data_path = (
-            "/private/home/ow045820/projects/habitat/"
+            "/private/home/ronghanghu/workspace/"
             + "habitat-api/data/datasets/pointnav/mp3d/v1/train/train.json.gz"
         )
         opt.val_data_path = (
-            "/private/home/ow045820/projects/habitat/"
+            "/private/home/ronghanghu/workspace/"
             + "habitat-api/data/datasets/pointnav/mp3d/v1/test/test.json.gz"
         )
         opt.test_data_path = (
-            "/private/home/ow045820/projects/habitat/"
+            "/private/home/ronghanghu/workspace/"
             + "habitat-api/data/datasets/pointnav/mp3d/v1/val/val.json.gz"
         )
-        opt.scenes_dir = "/checkpoint/ow045820/data/" # this should store mp3d
+        opt.scenes_dir = "/private/home/ronghanghu/workspace/habitat-api/data" # this should store mp3d
     elif opt.dataset == "habitat":
         opt.train_data_path = (
-            "/private/home/ow045820/projects/habitat/habitat-api/"
+            "/private/home/ronghanghu/workspace/habitat-api/"
             + "data/datasets/pointnav/habitat-test-scenes/v1/train/train.json.gz"
         )
         opt.val_data_path = (
-            "/private/home/ow045820/projects/habitat/habitat-api/"
+            "/private/home/ronghanghu/workspace/habitat-api/"
             + "data/datasets/pointnav/habitat-test-scenes/v1/val/val.json.gz"
         )
         opt.test_data_path = (
-            "/private/home/ow045820/projects/habitat/habitat-api/"
+            "/private/home/ronghanghu/workspace/habitat-api/"
             + "data/datasets/pointnav/habitat-test-scenes/v1/test/test.json.gz"
         )
-        opt.scenes_dir = "/private/home/ow045820/projects/habitat/habitat-api//data/scene_datasets"
+        opt.scenes_dir = "/private/home/ronghanghu/workspace/habitat-api/data/scene_datasets"
     elif opt.dataset == "replica":
         opt.train_data_path = (
-            "/private/home/ow045820/projects/habitat/habitat-api/"
+            "/private/home/ronghanghu/workspace/habitat-api/"
             + "data/datasets/pointnav/replica/v1/train/train.json.gz"
         )
         opt.val_data_path = (
-            "/private/home/ow045820/projects/habitat/habitat-api/"
+            "/private/home/ronghanghu/workspace/habitat-api/"
             + "data/datasets/pointnav/replica/v1/val/val.json.gz"
         )
         opt.test_data_path = (
-            "/private/home/ow045820/projects/habitat/habitat-api/"
+            "/private/home/ronghanghu/workspace/habitat-api/"
             + "data/datasets/pointnav/replica/v1/test/test.json.gz"
         )
-        opt.scenes_dir = "/checkpoint/ow045820/data/replica/"
+        opt.scenes_dir = "/private/home/ronghanghu/workspace/habitat-api/data/"
     elif opt.dataset == "realestate":
         opt.min_z = 1.0
         opt.max_z = 100.0

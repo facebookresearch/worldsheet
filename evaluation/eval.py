@@ -117,6 +117,7 @@ if __name__ == "__main__":
     BATCH_SIZE = test_ops.batch_size
 
     opts = torch.load(MODEL_PATH)["opts"]
+    opts.config = '/private/home/ronghanghu/workspace/habitat-api/configs/tasks/pointnav_rgbd.yaml'
     print("Model is: ", MODEL_PATH)
 
     opts.image_type = test_ops.image_type

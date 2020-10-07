@@ -88,7 +88,7 @@ class MeshGANLosses(nn.Module):
         else:
             with torch.no_grad():
                 d_losses = self.compute_discrimator_loss(fake_img, real_img, alpha_mask)
-        self._debug_log_d_losses(d_losses)
+        # self._debug_log_d_losses(d_losses)
 
         # we do not want generator loss' gradients to be accumulated in
         # discriminator parameters; turn off their requires_grad flag

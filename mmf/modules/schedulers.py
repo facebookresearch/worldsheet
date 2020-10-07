@@ -58,3 +58,23 @@ class MultiStepScheduler(PythiaScheduler):
                 base_lr * self.lr_ratio ** bisect_right(self.lr_steps, self.last_epoch)
                 for base_lr in self.base_lrs
             ]
+
+
+@registry.register_scheduler("pix2pixHD")
+class Pix2PixHDScheduler(PythiaScheduler):
+    def __init__(self, optimizer, *args, **kwargs):
+        self.constant_iterations = kwargs["constant_lr_iterations"]
+        self.total_iterations = kwargs["total_iterations"]
+        assert self.constant_iterations < self.total_iterations
+        super().__init__(optimizer)
+
+    def get_lr(self):
+        if self.last_epoch <= self.constant_iterations:
+            lr_ratio = 1.
+        else:
+            lr_ratio = (
+                (self.total_iterations - self.last_epoch) /
+                (self.total_iterations - self.constant_iterations)
+            )
+
+        return [base_lr * lr_ratio for base_lr in self.base_lrs]

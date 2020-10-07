@@ -306,7 +306,11 @@ class MeshRenderer(BaseModel):
         for k, v in losses_unscaled.items():
             if not torch.all(torch.isfinite(v)).item():
                 raise Exception("loss {} becomes {}".format(k, v.mean().item()))
-        losses = {k: (v * self.loss_weights[k]) for k, v in losses_unscaled.items()}
+        losses = {
+            f"{sample_list.dataset_type}/{sample_list.dataset_name}/{k}": \
+                (v * self.loss_weights[k])
+            for k, v in losses_unscaled.items()
+        }
 
         return losses
 

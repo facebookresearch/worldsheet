@@ -10,7 +10,7 @@ class SmoothedValue:
     window or the global series average.
     """
 
-    def __init__(self, window_size=20):
+    def __init__(self, window_size=5):
         self.window_size = window_size
         self.reset()
 
@@ -90,7 +90,7 @@ class Meter:
         for k, v in self.meters.items():
             if "train" in k:
                 log_dict[k] = f"{v.median:.4f}"
-                log_dict[f"{k}/avg"] = f"{v.global_avg:.4f}"
+                # log_dict[f"{k}/avg"] = f"{v.global_avg:.4f}"
             else:
                 log_dict[k] = f"{v.global_avg:.4f}"
         return log_dict

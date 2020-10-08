@@ -1,0 +1,16 @@
+includes:
+- ./mp3d_defaults.yaml
+
+model_config:
+  mesh_renderer:
+    loss_weights:
+      z_grid_l1_0: 0.
+      depth_l1_0: 0.
+      depth_l1_1: 0.
+      image_l1_1: 800
+      vgg19_perceptual_1: 200
+      grid_offset: 5
+      mesh_laplacian: 0.0025
+    mesh_laplacian_use_l2_loss: false
+    grid_stride: 4
+    pred_inv_z: false

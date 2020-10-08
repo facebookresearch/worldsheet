@@ -217,7 +217,9 @@ class MeshRenderer(BaseModel):
             rendering_results.update(metrics_dict)
             # average over batch, and do not compute gradient over metrics
             losses.update({
-                f"no_grad_{k}": v.detach().mean() for k, v in metrics_dict.items()
+                f"{sample_list.dataset_type}/{sample_list.dataset_name}/no_grad_{k}":
+                    v.detach().mean()
+                for k, v in metrics_dict.items()
             })
         if self.config.save_forward_results:
             self.save_forward_results(sample_list, xy_offset, z_grid, rendering_results)

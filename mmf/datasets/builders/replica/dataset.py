@@ -22,14 +22,20 @@ class ReplicaDataset(MMFDataset):
         current_sample.image_id = object_to_byte_tensor(sample_info["image_id"])
         data_path = os.path.join(self.multiview_data_dir, sample_info["data_path"])
         data_f = np.load(data_path)
+        load_rgbs_from_data = "rgbs" in data_f
         for n_view in range(self.num_view_per_sample):
             # RGB image
-            image_path = os.path.join(
-                self.multiview_image_dir, sample_info["image_path_template"] % n_view
-            )
-            orig_img = torch.tensor(
-                skimage.img_as_float(skimage.io.imread(image_path)), dtype=torch.float32
-            )
+            if load_rgbs_from_data:
+                orig_img = torch.tensor(data_f["rgbs"][n_view], dtype=torch.float32)
+            else:
+                image_path = os.path.join(
+                    self.multiview_image_dir,
+                    sample_info["image_path_template"] % n_view
+                )
+                orig_img = torch.tensor(
+                    skimage.img_as_float(skimage.io.imread(image_path)),
+                    dtype=torch.float32
+                )
             trans_img = self.image_processor(orig_img.permute((2, 0, 1)))
             setattr(current_sample, 'orig_img_{}'.format(n_view), orig_img)
             setattr(current_sample, 'trans_img_{}'.format(n_view), trans_img)
@@ -51,6 +57,10 @@ class ReplicaDataset(MMFDataset):
             T = torch.tensor(data_f["camera_Ts"][n_view], dtype=torch.float32)
             setattr(current_sample, 'R_{}'.format(n_view), R)
             setattr(current_sample, 'T_{}'.format(n_view), T)
+
+        if "vis_mask" in data_f:
+            current_sample.vis_mask = torch.tensor(
+                data_f["vis_mask"], dtype=torch.float32)
 
         data_f.close()
 

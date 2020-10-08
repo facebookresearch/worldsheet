@@ -14,6 +14,7 @@ from mmf.neural_rendering.losses import (
     ImageL1Loss, DepthL1Loss, MeshLaplacianLoss, GridOffsetLoss, ZGridL1Loss,
     VGG19PerceptualLoss
 )
+from mmf.neural_rendering.metrics.metrics import Metrics
 from mmf.common.registry import registry
 from mmf.models.base_model import BaseModel
 from mmf.utils.distributed import get_world_size, byte_tensor_to_object
@@ -85,6 +86,7 @@ class MeshRenderer(BaseModel):
                 self.use_discriminator = True
 
         self.build_losses()
+        self.build_metrics()
 
         if self.config.save_forward_results:
             os.makedirs(self.config.forward_results_dir, exist_ok=True)
@@ -101,6 +103,9 @@ class MeshRenderer(BaseModel):
         self.loss_vgg19_perceptual = VGG19PerceptualLoss()
 
         self.loss_weights = self.config.loss_weights
+
+    def build_metrics(self):
+        self.metrics = Metrics(self.config.metrics)
 
     def get_optimizer_parameters(self, config):
         # named_parameters contains ALL parameters, including those in discriminator
@@ -191,6 +196,10 @@ class MeshRenderer(BaseModel):
                 rgba_1_rec = torch.ones_like(rgba_1_rec)
                 rgba_1_rec[..., :3] = sample_list.orig_img_1
             rendering_results["rgb_1_inpaint"] = self.inpainting_net_G(rgba_1_rec)
+            rendering_results["rgb_1_out"] = rendering_results["rgb_1_inpaint"]
+        else:
+            _, rgba_1_rec = rendering_results["rgba_out_rec_list"]
+            rendering_results["rgb_1_out"] = rgba_1_rec[..., :3]
 
         # return only the rendering results and skip loss computation, usually for
         # visualization on-the-fly by calling this model separately (instead of running
@@ -199,6 +208,14 @@ class MeshRenderer(BaseModel):
             return rendering_results
 
         losses = self.forward_losses(sample_list, xy_offset, z_grid, rendering_results)
+        # compute metrics
+        if not self.training or not self.config.metrics.only_on_eval:
+            metrics_dict = self.forward_metrics(sample_list, rendering_results)
+            rendering_results.update(metrics_dict)
+            # average over batch, and do not compute gradient over metrics
+            losses.update({
+                f"no_grad_{k}": v.detach().mean() for k, v in metrics_dict.items()
+            })
         if self.config.save_forward_results:
             self.save_forward_results(sample_list, xy_offset, z_grid, rendering_results)
         return {"losses": losses}
@@ -307,12 +324,20 @@ class MeshRenderer(BaseModel):
             if not torch.all(torch.isfinite(v)).item():
                 raise Exception("loss {} becomes {}".format(k, v.mean().item()))
         losses = {
-            f"{sample_list.dataset_type}/{sample_list.dataset_name}/{k}": \
+            f"{sample_list.dataset_type}/{sample_list.dataset_name}/{k}":
                 (v * self.loss_weights[k])
             for k, v in losses_unscaled.items()
         }
 
         return losses
+
+    def forward_metrics(self, sample_list, rendering_results):
+        rgb_1_out = rendering_results["rgb_1_out"]
+        rgb_1_gt = sample_list.orig_img_1
+        vis_mask = sample_list.vis_mask if hasattr(sample_list, "vis_mask") else None
+        metrics_dict = self.metrics(rgb_1_out, rgb_1_gt, vis_mask)
+
+        return metrics_dict
 
 
 class OffsetAndZGridPredictor(nn.Module):

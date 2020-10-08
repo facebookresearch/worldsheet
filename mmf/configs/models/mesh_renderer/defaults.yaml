@@ -40,6 +40,11 @@ model_config:
       gan_feat: 0.  # kept for backward compatibility
       no_grad_d_fake: 1  # no_grad_d_fake and no_grad_d_real are just for logging purposes; they are not back-propagated
       no_grad_d_real: 1
+    metrics:
+      compute_psnr: true
+      compute_ssim: true
+      compute_perc_sim: false  # kept for backward compatibility
+      only_on_eval: true  # only do so during evaluation phase
     save_forward_results: false
     forward_results_dir: save/visualization
     return_rendering_results_only: false

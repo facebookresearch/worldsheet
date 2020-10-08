@@ -175,6 +175,9 @@ class MeshRenderer(BaseModel):
         else:
             xy_offset, z_grid = self.get_offset_and_depth_from_gt(sample_list)
 
+        if self.config.force_zero_xy_offset:
+            xy_offset = torch.zeros_like(xy_offset)
+
         rendering_results = {}
         if not self.config.train_z_grid_only:
             # use the original image (RGB value in 0~1) as rendering input

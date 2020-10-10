@@ -29,8 +29,8 @@ training:
   max_grad_l2_norm: 5
   lr_scheduler: true
   max_updates: 50000
-  checkpoint_interval: 5000
-  evaluation_interval: 5000
+  checkpoint_interval: 10000
+  evaluation_interval: 10000
   log_interval: 20
   batch_size: 64
   early_stop:

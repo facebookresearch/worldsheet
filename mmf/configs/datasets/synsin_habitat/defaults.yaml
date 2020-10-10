@@ -13,7 +13,7 @@ dataset_config:
         train:
         - synsin_habitat/defaults/annotations/imdb_mp3d_train.npy
         val:
-        - synsin_habitat/defaults/annotations/imdb_mp3d_mini_train.npy
+        - synsin_habitat/defaults/annotations/imdb_mp3d_val.npy
         test:
         - synsin_habitat/defaults/annotations/imdb_mp3d_test.npy
     processors:

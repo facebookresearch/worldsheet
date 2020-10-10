@@ -1,5 +1,6 @@
 from torch import nn
 from .ssim import ssim
+from .perc_sim import PNet
 
 
 # The PSNR metric
@@ -23,6 +24,16 @@ def ssim_metric(img1, img2, mask=None):
     return ssim(img1, img2, mask=mask, size_average=False)
 
 
+# The perceptual similarity metric
+def perceptual_sim(img1, img2, vgg16, mask=None):
+    if mask is not None:
+        img1 = img1 * mask
+        img2 = img2 * mask
+    # the input image is in range (0, 1), normalize to range (-1, +1)
+    dist = vgg16(img1 * 2 - 1, img2 * 2 - 1)
+    return dist
+
+
 class Metrics(nn.Module):
     def __init__(self, metrics_cfg):
         super().__init__()
@@ -30,9 +41,10 @@ class Metrics(nn.Module):
         self.compute_ssim = metrics_cfg.compute_ssim
         self.compute_perc_sim = metrics_cfg.compute_perc_sim
 
-        # metrics parameters shouldn't be optimized
-        for p in self.parameters():
-            p.requires_grad = False
+        # metrics should not have params that are stored in a model's
+        # state dict. For perceptual losses, VGG params are loaded from
+        # torchvision.
+        assert len(list(self.parameters())) == 0
 
     def forward(self, rgb_pred, rgb_gt, vis_mask=None):
         # NHWC to NCHW
@@ -72,4 +84,17 @@ class Metrics(nn.Module):
         if not self.compute_perc_sim:
             return
 
-        raise NotImplementedError()
+        # we'll initialize vgg16 late here, so that we can get the proper device
+        # from input, and put it in a list so that it doesn't go into model params
+        if not hasattr(self, "vgg16list"):
+            vgg16 = PNet().to(rgb_pred.device)
+            vgg16.eval()
+            self.vgg16list = [vgg16]
+
+        vgg16 = self.vgg16list[0]
+        results["perc_sim"] = perceptual_sim(rgb_pred, rgb_gt, vgg16)
+        if vis_mask is not None:
+            results["perc_sim_vis"] = perceptual_sim(rgb_pred, rgb_gt, vgg16, vis_mask)
+            results["perc_sim_invis"] = perceptual_sim(
+                rgb_pred, rgb_gt, vgg16, 1 - vis_mask
+            )

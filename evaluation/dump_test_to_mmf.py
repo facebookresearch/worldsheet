@@ -135,7 +135,7 @@ if __name__ == "__main__":
     sampled_model = Model(opts).to(device)
     sampled_model.eval()
 
-    data = Dataset("val", opts, vectorize=False)
+    data = Dataset("test", opts, vectorize=False)
     dataloader = DataLoader(
         data,
         shuffle=False,
@@ -162,6 +162,11 @@ if __name__ == "__main__":
 
             _, new_imgs = sampled_model(batch)
             sampled_img = (new_imgs["SampledImg"] * 0.5 + 0.5).cpu()
+
+        # Check to make sure options were set right and this matches the setup
+        # we used, so that numbers are comparable.
+        if i == 0:
+            check_initial_batch(batch, test_ops.dataset)
 
         mask = (output_img == sampled_img)
         mask = mask.float().min(dim=1, keepdim=True)[0]

@@ -267,6 +267,7 @@ class MeshRenderer(BaseModel):
             "grid_offset": self.loss_grid_offset(xy_offset),
         }
 
+        use_vgg19_loss = self.training or not self.config.vgg19_loss_only_on_train
         if not self.config.train_z_grid_only:
             rgba_0_rec, rgba_1_rec = rendering_results["rgba_out_rec_list"]
             depth_0_rec, depth_1_rec = rendering_results["depth_out_rec_list"]
@@ -285,7 +286,7 @@ class MeshRenderer(BaseModel):
                 rgb_pred=rgb_1_rec, rgb_gt=sample_list.orig_img_1,
                 loss_mask=sample_list.depth_mask_1.float()
             )
-            if self.loss_weights["vgg19_perceptual_1"] != 0:
+            if use_vgg19_loss and self.loss_weights["vgg19_perceptual_1"] != 0:
                 vgg19_perceptual_1 = self.loss_vgg19_perceptual(
                     rgb_pred=rgb_1_rec, rgb_gt=sample_list.orig_img_1,
                     loss_mask=sample_list.depth_mask_1.float()
@@ -306,7 +307,7 @@ class MeshRenderer(BaseModel):
             image_l1_1_inpaint = self.loss_image_l1(
                 rgb_pred=rgb_1_inpaint, rgb_gt=sample_list.orig_img_1,
             )
-            if self.loss_weights["vgg19_perceptual_1_inpaint"] != 0:
+            if use_vgg19_loss and self.loss_weights["vgg19_perceptual_1_inpaint"] != 0:
                 vgg19_perceptual_1_inpaint = self.loss_vgg19_perceptual(
                     rgb_pred=rgb_1_inpaint, rgb_gt=sample_list.orig_img_1,
                 )

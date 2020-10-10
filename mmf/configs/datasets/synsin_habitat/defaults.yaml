@@ -15,7 +15,7 @@ dataset_config:
         val:
         - synsin_habitat/defaults/annotations/imdb_mp3d_mini_train.npy
         test:
-        - synsin_habitat/defaults/annotations/imdb_mp3d_val.npy
+        - synsin_habitat/defaults/annotations/imdb_mp3d_test.npy
     processors:
       image_processor:
         type: torchvision_transforms

@@ -134,7 +134,7 @@ if __name__ == "__main__":
     # Update parameters
     opts.render_ids = test_ops.render_ids
     opts.gpu_ids = test_ops.gpu_ids
-
+    opts.jitter_quaternions_angle = test_ops.jitter_quaternions_angle
     opts.images_before_reset = test_ops.images_before_reset
 
     torch_devices = [int(gpu_id.strip()) for gpu_id in opts.gpu_ids.split(",")]
@@ -199,7 +199,7 @@ if __name__ == "__main__":
 
         # Check to make sure options were set right and this matches the setup
         # we used, so that numbers are comparable.
-        if i == 0:
+        if i == 0 and opts.jitter_quaternions_angle == 10:
             check_initial_batch(batch, test_ops.dataset)
 
         # Obtain the angles and translation

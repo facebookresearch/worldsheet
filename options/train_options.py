@@ -195,6 +195,9 @@ class ArgumentParser:
         dataset_params.add_argument(
             "--normalize_image", action="store_true", default=False
         )
+        dataset_params.add_argument(
+            "--jitter_quaternions_angle", type=int, default=10
+        )
 
     def add_train_parameters(self):
         training = self.parser.add_argument_group("training")

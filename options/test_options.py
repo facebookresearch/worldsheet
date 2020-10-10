@@ -47,6 +47,9 @@ class ArgumentParser:
         eval_params.add_argument(
             "--use_higher_res", action="store_true", default=False
         )
+        eval_params.add_argument(
+            "--jitter_quaternions_angle", type=int, default=10
+        )
 
     def parse(self, arg_str=None):
         if arg_str is None:

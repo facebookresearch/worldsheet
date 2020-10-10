@@ -125,7 +125,7 @@ if __name__ == "__main__":
     # Update parameters
     opts.render_ids = test_ops.render_ids
     opts.gpu_ids = test_ops.gpu_ids
-
+    opts.jitter_quaternions_angle = test_ops.jitter_quaternions_angle
     opts.images_before_reset = test_ops.images_before_reset
 
     torch_devices = [int(gpu_id.strip()) for gpu_id in opts.gpu_ids.split(",")]

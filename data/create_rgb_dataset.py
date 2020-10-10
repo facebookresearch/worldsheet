@@ -265,7 +265,7 @@ class RandomImageGenerator(object):
                 rand_rotation = jitter_quaternions(
                     quaternion.from_float_array(orig_rotation),
                     self.rng,
-                    angle=10,
+                    angle=self.opts.jitter_quaternions_angle,
                 )
                 rand_rotation = quaternion.as_float_array(
                     rand_rotation
@@ -280,7 +280,7 @@ class RandomImageGenerator(object):
                 rand_rotation = jitter_quaternions(
                     quaternion.from_float_array(orig_rotation),
                     self.rng,
-                    angle=10,
+                    angle=self.opts.jitter_quaternions_angle,
                 )
                 rand_rotation = quaternion.as_float_array(
                     rand_rotation
@@ -367,7 +367,7 @@ class RandomImageGenerator(object):
                     jitter_quaternions(
                         quaternion.from_float_array(rand_rotation),
                         self.rng,
-                        angle=10,
+                        angle=self.opts.jitter_quaternions_angle,
                     )
                 ).tolist()
             elif self.opts.image_type == "fixedRT_baseline":
@@ -380,7 +380,7 @@ class RandomImageGenerator(object):
                     jitter_quaternions(
                         quaternion.from_float_array(rand_rotation),
                         self.rng,
-                        angle=10,
+                        angle=self.opts.jitter_quaternions_angle,
                     )
                 ).tolist()
 

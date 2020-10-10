@@ -35,8 +35,8 @@ training:
   batch_size: 64
   early_stop:
     enabled: false
-    criteria: total_loss
-    minimize: true
+    criteria: synsin_habitat/no_grad_psnr_vis
+    minimize: false
   stdout_capture: false
   find_unused_parameters: true
   log_format: json

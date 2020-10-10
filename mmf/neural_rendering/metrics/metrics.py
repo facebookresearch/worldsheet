@@ -67,18 +67,18 @@ class Metrics(nn.Module):
     def add_psnr_results(self, results, rgb_pred, rgb_gt, vis_mask):
         if not self.compute_psnr:
             return
-        results["psnr"] = psnr_metric(rgb_pred, rgb_gt)
+        results["PSNR"] = psnr_metric(rgb_pred, rgb_gt)
         if vis_mask is not None:
-            results["psnr_vis"] = psnr_metric(rgb_pred, rgb_gt, vis_mask)
-            results["psnr_invis"] = psnr_metric(rgb_pred, rgb_gt, 1 - vis_mask)
+            results["PSNR_Vis"] = psnr_metric(rgb_pred, rgb_gt, vis_mask)
+            results["PSNR_InVis"] = psnr_metric(rgb_pred, rgb_gt, 1 - vis_mask)
 
     def add_ssim_results(self, results, rgb_pred, rgb_gt, vis_mask):
         if not self.compute_ssim:
             return
-        results["ssim"] = ssim_metric(rgb_pred, rgb_gt)
+        results["SSIM"] = ssim_metric(rgb_pred, rgb_gt)
         if vis_mask is not None:
-            results["ssim_vis"] = ssim_metric(rgb_pred, rgb_gt, vis_mask)
-            results["ssim_invis"] = ssim_metric(rgb_pred, rgb_gt, 1 - vis_mask)
+            results["SSIM_Vis"] = ssim_metric(rgb_pred, rgb_gt, vis_mask)
+            results["SSIM_InVis"] = ssim_metric(rgb_pred, rgb_gt, 1 - vis_mask)
 
     def add_perc_sim_results(self, results, rgb_pred, rgb_gt, vis_mask):
         if not self.compute_perc_sim:
@@ -92,9 +92,9 @@ class Metrics(nn.Module):
             self.vgg16list = [vgg16]
 
         vgg16 = self.vgg16list[0]
-        results["perc_sim"] = perceptual_sim(rgb_pred, rgb_gt, vgg16)
+        results["PercSim"] = perceptual_sim(rgb_pred, rgb_gt, vgg16)
         if vis_mask is not None:
-            results["perc_sim_vis"] = perceptual_sim(rgb_pred, rgb_gt, vgg16, vis_mask)
-            results["perc_sim_invis"] = perceptual_sim(
+            results["PercSim_Vis"] = perceptual_sim(rgb_pred, rgb_gt, vgg16, vis_mask)
+            results["PercSim_InVis"] = perceptual_sim(
                 rgb_pred, rgb_gt, vgg16, 1 - vis_mask
             )

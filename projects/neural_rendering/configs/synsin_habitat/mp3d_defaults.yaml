@@ -35,7 +35,7 @@ training:
   batch_size: 64
   early_stop:
     enabled: false
-    criteria: synsin_habitat/no_grad_psnr_vis
+    criteria: synsin_habitat/no_grad_PSNR_Vis
     minimize: false
   stdout_capture: false
   find_unused_parameters: true

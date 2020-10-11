@@ -89,6 +89,8 @@ class Metrics(nn.Module):
         if not hasattr(self, "vgg16list"):
             vgg16 = PNet().to(rgb_pred.device)
             vgg16.eval()
+            for p in vgg16.parameters():
+                p.requires_grad = False
             self.vgg16list = [vgg16]
 
         vgg16 = self.vgg16list[0]

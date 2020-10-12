@@ -209,6 +209,17 @@ if __name__ == "__main__":
                 batch["cameras"][-1]["P"][batch_id, 0:3, :],
             )
 
+        if i < 10:
+            os.makedirs(test_ops.result_folder + "/pred/", exist_ok=True)
+            from skimage.io import imsave
+            batch_size = pred_imgs["PredImg"].size(0)
+            for j in range(batch_size):
+                im = pred_imgs["PredImg"][j].detach().cpu().numpy()
+                assert im.shape[0] == 3
+                im = im.transpose((1, 2, 0))
+                idx = i * batch_size + j
+                imsave(test_ops.result_folder + f"/pred/{idx:08d}.png", im)
+
         for metric, func in METRICS.items():
             key = "InputImg" if test_ops.test_input_image else "PredImg"
             t_results = func(pred_imgs, key)

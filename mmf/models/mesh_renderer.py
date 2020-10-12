@@ -58,6 +58,12 @@ class MeshRenderer(BaseModel):
             backbone_name=self.config.backbone_name,
             backbone_dim=self.config.backbone_dim
         )
+        if self.config.freeze_offset_and_depth_predictor:
+            assert self.config.use_inpainting, \
+                "freeze_offset_and_depth_predictor is intended for inpainter " \
+                "training alone."
+            for p in self.offset_and_depth_predictor.parameters():
+                p.requires_grad = False
 
         self.novel_view_projector = NovelViewProjector(
             batch_size=self.batch_size,

@@ -338,7 +338,7 @@ class MeshRenderer(BaseModel):
         losses = {
             f"{sample_list.dataset_type}/{sample_list.dataset_name}/{k}":
                 (v * self.loss_weights[k])
-            for k, v in losses_unscaled.items()
+            for k, v in losses_unscaled.items() if self.loss_weights[k] != 0
         }
 
         return losses

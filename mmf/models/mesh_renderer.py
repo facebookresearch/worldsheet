@@ -244,10 +244,6 @@ class MeshRenderer(BaseModel):
             save_dict = {
                 "orig_img_0": sample_list.orig_img_0[n_im],
                 "orig_img_1": sample_list.orig_img_1[n_im],
-                "depth_0": sample_list.depth_0[n_im],
-                "depth_1": sample_list.depth_1[n_im],
-                "depth_mask_0": sample_list.depth_mask_0[n_im],
-                "depth_mask_1": sample_list.depth_mask_1[n_im],
                 "xy_offset": xy_offset[n_im],
                 "z_grid": z_grid[n_im],
                 "texture_image_rec": texture_image_rec[n_im],
@@ -256,6 +252,13 @@ class MeshRenderer(BaseModel):
                 "depth_0_rec": depth_0_rec[n_im],
                 "depth_1_rec": depth_1_rec[n_im],
             }
+            if sample_list.dataset_name in ["synsin_habitat", "replica"]:
+                save_dict.update({
+                    "depth_0": sample_list.depth_0[n_im],
+                    "depth_1": sample_list.depth_1[n_im],
+                    "depth_mask_0": sample_list.depth_mask_0[n_im],
+                    "depth_mask_1": sample_list.depth_mask_1[n_im],
+                })
             if self.config.use_inpainting:
                 rgb_1_inpaint = rendering_results["rgb_1_inpaint"]
                 save_dict.update({"rgb_1_inpaint": rgb_1_inpaint[n_im]})
@@ -264,10 +267,12 @@ class MeshRenderer(BaseModel):
             np.savez(save_file, **save_dict)
 
     def forward_losses(self, sample_list, xy_offset, z_grid, rendering_results):
-        z_grid_l1_0 = self.loss_z_grid_l1(
-            z_grid_pred=z_grid, depth_gt=sample_list.depth_0,
-            depth_loss_mask=sample_list.depth_mask_0.float()
-        )
+        z_grid_l1_0 = None
+        if self.loss_weights["z_grid_l1_0"] != 0:
+            z_grid_l1_0 = self.loss_z_grid_l1(
+                z_grid_pred=z_grid, depth_gt=sample_list.depth_0,
+                depth_loss_mask=sample_list.depth_mask_0.float()
+            )
         losses_unscaled = {
             "z_grid_l1_0": z_grid_l1_0,
             "grid_offset": self.loss_grid_offset(xy_offset),
@@ -280,14 +285,18 @@ class MeshRenderer(BaseModel):
             scaled_verts = rendering_results["scaled_verts"]
             rgb_1_rec = rgba_1_rec[..., :3]
 
-            depth_l1_0 = self.loss_depth_l1(
-                depth_pred=depth_0_rec, depth_gt=sample_list.depth_0,
-                loss_mask=sample_list.depth_mask_0.float()
-            )
-            depth_l1_1 = self.loss_depth_l1(
-                depth_pred=depth_1_rec, depth_gt=sample_list.depth_1,
-                loss_mask=sample_list.depth_mask_1.float()
-            )
+            depth_l1_0 = None
+            if self.loss_weights["depth_l1_0"] != 0:
+                depth_l1_0 = self.loss_depth_l1(
+                    depth_pred=depth_0_rec, depth_gt=sample_list.depth_0,
+                    loss_mask=sample_list.depth_mask_0.float()
+                )
+            depth_l1_1 = None
+            if self.loss_weights["depth_l1_1"] != 0:
+                depth_l1_1 = self.loss_depth_l1(
+                    depth_pred=depth_1_rec, depth_gt=sample_list.depth_1,
+                    loss_mask=sample_list.depth_mask_1.float()
+                )
             image_l1_1 = self.loss_image_l1(
                 rgb_pred=rgb_1_rec, rgb_gt=sample_list.orig_img_1,
                 loss_mask=sample_list.depth_mask_1.float()
@@ -333,7 +342,7 @@ class MeshRenderer(BaseModel):
                 losses_unscaled.update(g_losses)
 
         for k, v in losses_unscaled.items():
-            if not torch.all(torch.isfinite(v)).item():
+            if (v is not None) and (not torch.all(torch.isfinite(v)).item()):
                 raise Exception("loss {} becomes {}".format(k, v.mean().item()))
         losses = {
             f"{sample_list.dataset_type}/{sample_list.dataset_name}/{k}":

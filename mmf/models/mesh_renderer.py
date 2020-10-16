@@ -55,6 +55,7 @@ class MeshRenderer(BaseModel):
             pred_inv_z=self.config.pred_inv_z,
             pred_inv_z_synsin=self.config.pred_inv_z_synsin,
             z_pred_scaling=self.config.z_pred_scaling,
+            z_pred_offset=self.config.z_pred_offset,
             backbone_name=self.config.backbone_name,
             backbone_dim=self.config.backbone_dim
         )
@@ -364,7 +365,7 @@ class MeshRenderer(BaseModel):
 class OffsetAndZGridPredictor(nn.Module):
     def __init__(
         self, grid_stride, grid_H, grid_W, z_min, z_max, pred_inv_z, pred_inv_z_synsin,
-        z_pred_scaling, backbone_name, backbone_dim
+        z_pred_scaling, z_pred_offset, backbone_name, backbone_dim
     ):
         super().__init__()
 
@@ -379,6 +380,7 @@ class OffsetAndZGridPredictor(nn.Module):
         self.pred_inv_z = pred_inv_z
         self.pred_inv_z_synsin = pred_inv_z_synsin
         self.z_pred_scaling = z_pred_scaling
+        self.z_pred_offset = z_pred_offset
 
         network = getattr(models, backbone_name)
         # the minimum output stride for resnet is 8 pixels
@@ -437,12 +439,12 @@ class OffsetAndZGridPredictor(nn.Module):
         if self.pred_inv_z_synsin:
             z_grid = torch.sigmoid(z_grid - 2.8)
             z_grid = 1. / (z_grid * 10 + 0.01) - 0.1
-            z_grid = z_grid * self.z_pred_scaling
+            z_grid = z_grid * self.z_pred_scaling + self.z_pred_offset
             z_grid = torch.clamp(z_grid, min=self.z_min, max=self.z_max)
         elif self.pred_inv_z:
             z_grid = torch.sigmoid(z_grid)
             z_grid = 1. / (z_grid * 0.75 + 0.01) - 1
-            z_grid = z_grid * self.z_pred_scaling
+            z_grid = z_grid * self.z_pred_scaling + self.z_pred_offset
             z_grid = torch.clamp(z_grid, min=self.z_min, max=self.z_max)
         else:
             z_grid = torch.sigmoid(z_grid)

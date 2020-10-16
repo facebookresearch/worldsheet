@@ -7,6 +7,7 @@ model_config:
     z_min: 0.02
     z_max: 10.
     z_pred_scaling: 1.0
+    z_pred_offset: 0.0
     pred_inv_z: true
     pred_inv_z_synsin: false
     backbone_name: resnet50

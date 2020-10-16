@@ -14,16 +14,3 @@ class DiodeBuilder(MMFDatasetBuilder):
     @classmethod
     def config_path(cls):
         return "configs/datasets/diode/defaults.yaml"
-
-    # TODO: Deprecate this method and move configuration updates directly to processors
-    def update_registry_for_model(self, config):
-        if hasattr(self.dataset, "text_processor"):
-            registry.register(
-                self.dataset_name + "_text_vocab_size",
-                self.dataset.text_processor.get_vocab_size(),
-            )
-        if hasattr(self.dataset, "answer_processor"):
-            registry.register(
-                self.dataset_name + "_num_final_outputs",
-                self.dataset.answer_processor.get_vocab_size(),
-            )

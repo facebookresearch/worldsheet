@@ -31,6 +31,13 @@ class SynSinRealEstate10KDataset(BaseDataset):
                 config.eval_data_dir, config.eval_video_list, config.image_size
             )
 
+        # create a dummy vis mask for image central regions
+        self.dummy_vis_mask = torch.zeros(
+            config.image_size, config.image_size, 1, dtype=torch.float32
+        )
+        crop = config.image_size // 4
+        self.dummy_vis_mask[crop:-crop, crop:-crop] = 1.
+
     def __getitem__(self, idx):
         synsin_data = self.synsin_realestate10k[idx]
 
@@ -53,6 +60,8 @@ class SynSinRealEstate10KDataset(BaseDataset):
             T = torch.tensor(camera_T, dtype=torch.float32)
             setattr(current_sample, 'R_{}'.format(n_view), R)
             setattr(current_sample, 'T_{}'.format(n_view), T)
+
+        current_sample.vis_mask = self.dummy_vis_mask
 
         return current_sample
 

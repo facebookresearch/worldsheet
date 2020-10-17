@@ -5,4 +5,5 @@ modelcheckpoints/*
 dumped*/*
 test_results*/*
 results*/*
+results_*
 logging/*

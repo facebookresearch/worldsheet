@@ -70,6 +70,7 @@ model_config:
         optimizer:
           lr: 2e-4  # same as in pix2pixHD
           beta1: 0.5  # same as in pix2pixHD
+          beta2: 0.999  # same as in pix2pixHD
           weight_decay: 0.  # same as in pix2pixHD
       use_discriminator: false  # kept for backward compatibility
       net_D:
@@ -83,5 +84,6 @@ model_config:
         lambda_feat: 10.0
         optimizer:
           lr: 2e-4
-          beta1: 0.5
+          beta1: 0.5  # same as in pix2pixHD
+          beta2: 0.999  # same as in pix2pixHD
           weight_decay: 0.  # same as in pix2pixHD

@@ -132,7 +132,10 @@ class MeshRenderer(BaseModel):
             param_groups.append({
                 "params": generator_params,
                 "lr": self.config.inpainting.net_G.optimizer.lr,
-                "betas": (self.config.inpainting.net_G.optimizer.beta1, 0.999),
+                "betas": (
+                    self.config.inpainting.net_G.optimizer.beta1,
+                    self.config.inpainting.net_G.optimizer.beta2
+                ),
                 "weight_decay": self.config.inpainting.net_G.optimizer.weight_decay,
             })
             registered.update(generator_params)
@@ -143,7 +146,10 @@ class MeshRenderer(BaseModel):
             param_groups.append({
                 "params": discriminator_params,
                 "lr": self.config.inpainting.net_D.optimizer.lr,
-                "betas": (self.config.inpainting.net_D.optimizer.beta1, 0.999),
+                "betas": (
+                    self.config.inpainting.net_D.optimizer.beta1,
+                    self.config.inpainting.net_D.optimizer.beta2
+                ),
                 "weight_decay": self.config.inpainting.net_D.optimizer.weight_decay,
             })
             registered.update(discriminator_params)

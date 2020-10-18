@@ -6,4 +6,4 @@ python mmf_cli/run.py config=projects/neural_rendering/configs/replica/${EXP_NAM
     model=mesh_renderer \
     env.save_dir=./save/replica/${EXP_NAME} \
     run_type=train_val \
-    checkpoint.resume=True ${ARGS}
+    checkpoint.reset.all=False checkpoint.resume_file=None checkpoint.resume=True ${ARGS}

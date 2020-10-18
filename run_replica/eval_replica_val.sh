@@ -5,4 +5,4 @@ python mmf_cli/run.py config=projects/neural_rendering/configs/replica/${EXP_NAM
     datasets=replica \
     model=mesh_renderer \
     env.save_dir=./save/replica/${EXP_NAME} \
-    checkpoint.resume=True checkpoint.resume_best=True run_type=val ${ARGS}
+    checkpoint.resume_file=None checkpoint.resume=True checkpoint.resume_best=True run_type=val ${ARGS}

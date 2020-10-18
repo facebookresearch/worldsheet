@@ -8,4 +8,4 @@ python mmf_cli/run.py config=projects/neural_rendering/configs/synsin_habitat/${
     dataset_config.synsin_habitat.multiview_data_dir=/checkpoint/ronghanghu/neural_rendering_datasets/synsin_replica \
     dataset_config.synsin_habitat.multiview_image_dir=/checkpoint/ronghanghu/neural_rendering_datasets/synsin_replica \
     dataset_config.synsin_habitat.annotations.test="['synsin_habitat/defaults/annotations/imdb_replica_test.npy']" \
-    checkpoint.resume=True checkpoint.resume_best=True run_type=test ${ARGS}
+    checkpoint.resume_file=None checkpoint.resume=True checkpoint.resume_best=True run_type=test ${ARGS}

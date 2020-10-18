@@ -5,4 +5,4 @@ python mmf_cli/run.py config=projects/neural_rendering/configs/synsin_realestate
     datasets=synsin_realestate10k \
     model=mesh_renderer \
     env.save_dir=./save/synsin_realestate10k/${EXP_NAME} \
-    checkpoint.resume=True checkpoint.resume_best=True run_type=val ${ARGS}
+    checkpoint.resume_file=None checkpoint.resume=True checkpoint.resume_best=True run_type=val ${ARGS}

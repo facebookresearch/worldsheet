@@ -1,7 +1,8 @@
 import logging
 import torch
 from torch import nn
-from .pix2pix_networks import GANLoss, MultiscaleDiscriminator, get_norm_layer
+from .pix2pix_networks import MultiscaleDiscriminator, get_norm_layer
+from .synsin_gan import GANLoss
 
 
 logger = logging.getLogger(__name__)
@@ -14,7 +15,7 @@ class MeshGANLosses(nn.Module):
         super().__init__()
         self.D_cfg = D_cfg
         self.model = MeshRGBDiscriminator(D_cfg)
-        self.criterionGAN = GANLoss(use_lsgan=not D_cfg.no_lsgan)
+        self.criterionGAN = GANLoss(gan_mode=D_cfg.gan_mode)
         self.criterionFeat = torch.nn.L1Loss()
 
         self._trainable_params = [p for p in self.model.parameters() if p.requires_grad]
@@ -50,7 +51,7 @@ class MeshGANLosses(nn.Module):
         pred_fake, pred_real = self._discriminate(fake_img, real_img, alpha_mask)
 
         g_losses = {}
-        g_losses["gan"] = self.criterionGAN(pred_fake, True)
+        g_losses["gan"] = self.criterionGAN(pred_fake, True, for_discriminator=False)
         if not self.D_cfg.no_ganFeat_loss:
             feat_weights = 4.0 / (self.D_cfg.n_layers + 1)
             D_weights = 1.0 / self.D_cfg.num_D
@@ -72,8 +73,8 @@ class MeshGANLosses(nn.Module):
         )
 
         d_losses = {
-            "d_fake": self.criterionGAN(pred_fake, False),
-            "d_real": self.criterionGAN(pred_real, True),
+            "d_fake": self.criterionGAN(pred_fake, False, for_discriminator=True),
+            "d_real": self.criterionGAN(pred_real, True, for_discriminator=True),
         }
         return d_losses
 
@@ -147,7 +148,7 @@ class MeshRGBDiscriminator(nn.Module):
             ndf=D_cfg.ndf,
             n_layers=D_cfg.n_layers,
             norm_layer=get_norm_layer(norm_type=D_cfg.norm),
-            use_sigmoid=D_cfg.no_lsgan,
+            use_sigmoid=False,  # sigmoid will be added in loss function if needed
             num_D=D_cfg.num_D,
             getIntermFeat=not D_cfg.no_ganFeat_loss
         )

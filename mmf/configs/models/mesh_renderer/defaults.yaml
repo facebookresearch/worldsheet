@@ -77,7 +77,7 @@ model_config:
         n_layers: 3
         norm: instance
         use_alpha_input: false  # kept for backward compatibility
-        no_lsgan: false
+        gan_mode: PLEASE_FILL_IT
         no_ganFeat_loss: false
         num_D: 2
         lambda_feat: 10.0

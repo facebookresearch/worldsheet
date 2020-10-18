@@ -24,12 +24,12 @@ model_config:
         use_alpha_input: true
         norm: batch
         optimizer:
-          lr: 1e-4
+          lr: 2e-4
       use_discriminator: true
       net_D:
         norm: batch
         optimizer:
-          lr: 1e-4
+          lr: 2e-4
         gan_mode: hinge
 
 distributed:

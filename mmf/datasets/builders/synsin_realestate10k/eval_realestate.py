@@ -87,4 +87,6 @@ class Dataset(data.Dataset):
 
             cameras += [{"P": P}]
 
-        return {"images": [src_image, tgt_image], "cameras": cameras, "video_id": file_name[0]}
+            video_id = f"{index:04d}_{file_name[0]}_{file_name[1]}_{file_name[2]}"
+
+        return {"images": [src_image, tgt_image], "cameras": cameras, "video_id": video_id}

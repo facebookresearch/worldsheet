@@ -26,9 +26,14 @@ class SynSinRealEstate10KDataset(BaseDataset):
             self.synsin_realestate10k = RealEstate10K(
                 self._dataset_type, opts=opts, num_views=self.num_view_per_sample
             )
-        else:
+        elif self._dataset_type == "val":
             self.synsin_realestate10k = RealEstate10KEval(
-                config.eval_data_dir, config.eval_video_list, config.image_size
+                config.eval_val_frames, config.eval_val_cameras, config.image_size
+            )
+        else:
+            assert self._dataset_type == "test"
+            self.synsin_realestate10k = RealEstate10KEval(
+                config.eval_test_frames, config.eval_test_cameras, config.image_size
             )
 
         # create a dummy vis mask for image central regions

@@ -5,8 +5,10 @@ dataset_config:
     num_view_per_sample: 2
     train_data_dir: /checkpoint/ronghanghu/neural_rendering_datasets/realestate10K/RealEstate10K/frames/train/
     train_video_list: /checkpoint/ronghanghu/neural_rendering_datasets/realestate10K/RealEstate10K/frames/train/video_loc.txt
-    eval_data_dir: /checkpoint/ronghanghu/neural_rendering_datasets/realestate10K/RealEstate10K/all_frames/test/
-    eval_video_list: ./mmf/datasets/builders/synsin_realestate10k/realestate.txt
+    eval_val_frames: /checkpoint/ronghanghu/neural_rendering_datasets/realestate10K/RealEstate10K/frames/train/
+    eval_val_cameras: ./mmf/datasets/builders/synsin_realestate10k/realestate_val.txt
+    eval_test_frames: /checkpoint/ronghanghu/neural_rendering_datasets/realestate10K/RealEstate10K/all_frames/test/
+    eval_test_cameras: ./mmf/datasets/builders/synsin_realestate10k/realestate_test.txt
     processors:
       image_processor:
         type: torchvision_transforms

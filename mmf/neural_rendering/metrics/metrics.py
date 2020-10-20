@@ -50,6 +50,7 @@ class Metrics(nn.Module):
         # NHWC to NCHW
         assert rgb_pred.size(-1) == 3
         assert rgb_gt.size(-1) == 3
+        rgb_pred = rgb_pred.clamp(min=0, max=1)
         rgb_pred = rgb_pred.permute(0, 3, 1, 2)
         rgb_gt = rgb_gt.permute(0, 3, 1, 2)
         if vis_mask is not None:

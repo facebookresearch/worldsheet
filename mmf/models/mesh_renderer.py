@@ -241,6 +241,8 @@ class MeshRenderer(BaseModel):
     def save_forward_results(self, sample_list, xy_offset, z_grid, rendering_results):
         texture_image_rec = rendering_results["texture_image_rec"]
         rgba_0_rec, rgba_1_rec = rendering_results["rgba_out_rec_list"]
+        rgba_0_rec = rgba_0_rec.clamp(min=0, max=1)
+        rgba_1_rec = rgba_1_rec.clamp(min=0, max=1)
         depth_0_rec, depth_1_rec = rendering_results["depth_out_rec_list"]
 
         for n_im in range(xy_offset.size(0)):
@@ -269,6 +271,7 @@ class MeshRenderer(BaseModel):
                 })
             if self.config.use_inpainting:
                 rgb_1_inpaint = rendering_results["rgb_1_inpaint"]
+                rgb_1_inpaint = rgb_1_inpaint.clamp(min=0, max=1)
                 save_dict.update({"rgb_1_inpaint": rgb_1_inpaint[n_im]})
 
             save_dict = {k: v.detach().cpu().numpy() for k, v in save_dict.items()}

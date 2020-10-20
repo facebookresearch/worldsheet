@@ -1,7 +1,9 @@
 import numpy as np
 import torch.utils.data as data
-from skimage.io import imread
-from skimage.transform import resize
+# from skimage.io import imread
+# from skimage.transform import resize
+from skimage import img_as_float
+from PIL import Image
 
 
 class Dataset(data.Dataset):
@@ -58,8 +60,15 @@ class Dataset(data.Dataset):
         src_pose = file_name[7:19].astype(np.float32).reshape(3, 4)
         tgt_pose = file_name[19:].astype(np.float32).reshape(3, 4)
 
-        src_image = resize(imread(src_image_name), [self.W, self.W])
-        tgt_image = resize(imread(tgt_image_name), [self.W, self.W])
+        # use PIL.Image.resize to be consistent w/ torchvision transforms
+        # src_image = resize(imread(src_image_name), [self.W, self.W])
+        # tgt_image = resize(imread(tgt_image_name), [self.W, self.W])
+        src_image = img_as_float(
+            np.array(
+                Image.open(src_image_name).resize([self.W, self.W], Image.BILINEAR)))
+        tgt_image = img_as_float(
+            np.array(
+                Image.open(tgt_image_name).resize([self.W, self.W], Image.BILINEAR)))
 
         poses = [src_pose, tgt_pose]
         cameras = []

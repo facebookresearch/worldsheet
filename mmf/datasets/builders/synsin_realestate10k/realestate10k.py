@@ -2,9 +2,10 @@
 
 import numpy as np
 import torch.utils.data as data
-# from PIL import Image
-from skimage.io import imread
-from skimage.transform import resize
+# from skimage.io import imread
+# from skimage.transform import resize
+from skimage import img_as_float
+from PIL import Image
 # from torchvision.transforms import Compose, Normalize, Resize, ToTensor
 
 from .geometry import get_deltas
@@ -118,13 +119,15 @@ class RealEstate10K(data.Dataset):
                     self.rng.randint(image_indices.shape[0])
                 ]
 
-            image = imread(
+            image = Image.open(
                 self.base_file
                 + "/%s/" % (self.imageset[index])
                 + str(int(frames[t_index, 0]))
                 + ".png"
             )
-            rgbs += [resize(image, [self.W, self.W])]
+            rgbs += [
+                img_as_float(np.array(image.resize([self.W, self.W], Image.BILINEAR)))
+            ]
 
             intrinsics = frames[t_index, 1:7]
             extrinsics = frames[t_index, 7:]

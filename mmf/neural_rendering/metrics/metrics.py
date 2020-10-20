@@ -40,6 +40,7 @@ class Metrics(nn.Module):
         self.compute_psnr = metrics_cfg.compute_psnr
         self.compute_ssim = metrics_cfg.compute_ssim
         self.compute_perc_sim = metrics_cfg.compute_perc_sim
+        self.uint8_conversion = metrics_cfg.uint8_conversion
 
         # metrics should not have params that are stored in a model's
         # state dict. For perceptual losses, VGG params are loaded from
@@ -51,6 +52,10 @@ class Metrics(nn.Module):
         assert rgb_pred.size(-1) == 3
         assert rgb_gt.size(-1) == 3
         rgb_pred = rgb_pred.clamp(min=0, max=1)
+        if self.uint8_conversion:
+            rgb_pred = emulate_uint8_conversion(rgb_pred)
+            rgb_gt = emulate_uint8_conversion(rgb_gt)
+
         rgb_pred = rgb_pred.permute(0, 3, 1, 2)
         rgb_gt = rgb_gt.permute(0, 3, 1, 2)
         if vis_mask is not None:
@@ -101,3 +106,10 @@ class Metrics(nn.Module):
             results["PercSim_InVis"] = perceptual_sim(
                 rgb_pred, rgb_gt, vgg16, 1 - vis_mask
             )
+
+
+def emulate_uint8_conversion(im):
+    # first convert the image to uint8 and then to float32 again,
+    # to emulate the precision loss from saving the image to a uint8 PNG file
+    # for offline evaluation
+    return (im * 255).round().clamp(min=0, max=255) / 255

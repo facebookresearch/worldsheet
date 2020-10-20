@@ -11,6 +11,8 @@ model_config:
     rendering:
       z_background: 2.5  # this number doesn't matter since depth supervision is not used
       background_color: [0.544606, 0.49547735, 0.4452502]  # SynSin RealEstate10K mean RGB
+    metrics:
+      uint8_conversion: true
 
 optimizer:
   type: adam_w  # HuggingFace transformer's AdamW

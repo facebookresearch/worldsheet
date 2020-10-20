@@ -8,3 +8,4 @@ python mmf_cli/run.py config=projects/neural_rendering/configs/synsin_habitat/${
     env.save_dir=./save/synsin_habitat/${EXP_NAME} \
     dataset_config.synsin_habitat.annotations.test="['synsin_habitat/defaults/annotations/imdb_mp3d_test_jitter_angle20.npy']" \
     checkpoint.resume_file=save/synsin_habitat/${EXP_NAME}/models/model_${ITER}.ckpt run_type=test ${ARGS}
+echo "exp:" ${EXP_NAME}

@@ -48,6 +48,7 @@ class TrainerEvaluationLoopMixin(ABC):
             # enable train mode again
             self.model.train()
 
+        _print_psnr_ssim_perc_sim(meter)
         return combined_report, meter
 
     def prediction_loop(self, dataset_type: str) -> None:
@@ -68,3 +69,34 @@ class TrainerEvaluationLoopMixin(ABC):
 
             logger.info("Finished predicting")
             self.model.train()
+
+
+def _print_psnr_ssim_perc_sim(meter):
+    meters = meter.meters
+    keys_to_print = [
+        "PSNR",
+        "PSNR_InVis",
+        "PSNR_Vis",
+        "SSIM",
+        "SSIM_InVis",
+        "SSIM_Vis",
+        "PercSim",
+        "PercSim_InVis",
+        "PercSim_Vis",
+    ]
+    key_print_list = []
+    val_print_list = []
+    for k_print in keys_to_print:
+        for k, v in meters.items():
+            if k.endswith(k_print):
+                key_print_list.append(k)
+                val_print_list.append(f"{v.global_avg:.4f}")
+
+    if len(key_print_list) > 0:
+        print('\n')
+        print('-' * 80)
+        print('copy-paste metrics:')
+        print(','.join(key_print_list))
+        print(','.join(val_print_list))
+        print('-' * 80)
+        print('\n')

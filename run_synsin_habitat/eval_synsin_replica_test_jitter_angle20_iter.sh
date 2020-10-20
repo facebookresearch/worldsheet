@@ -10,3 +10,4 @@ python mmf_cli/run.py config=projects/neural_rendering/configs/synsin_habitat/${
     dataset_config.synsin_habitat.multiview_image_dir=/checkpoint/ronghanghu/neural_rendering_datasets/synsin_replica \
     dataset_config.synsin_habitat.annotations.test="['synsin_habitat/defaults/annotations/imdb_replica_test_jitter_angle20.npy']" \
     checkpoint.resume_file=save/synsin_habitat/${EXP_NAME}/models/model_${ITER}.ckpt run_type=test ${ARGS}
+echo "exp:" ${EXP_NAME}

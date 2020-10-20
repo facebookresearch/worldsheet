@@ -246,7 +246,8 @@ class MeshRenderer(BaseModel):
         for n_im in range(xy_offset.size(0)):
             image_id = byte_tensor_to_object(sample_list.image_id[n_im])
             save_file = os.path.join(
-                self.config.forward_results_dir, '{}_outputs.npz'.format(image_id)
+                self.config.forward_results_dir,
+                '{}_outputs.npz'.format(image_id.replace("/", "-"))
             )
             save_dict = {
                 "orig_img_0": sample_list.orig_img_0[n_im],

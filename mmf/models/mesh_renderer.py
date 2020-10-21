@@ -2,6 +2,7 @@
 import logging
 import os
 
+import skimage.io
 import numpy as np
 import torch
 from torch import nn
@@ -247,6 +248,27 @@ class MeshRenderer(BaseModel):
 
         for n_im in range(xy_offset.size(0)):
             image_id = byte_tensor_to_object(sample_list.image_id[n_im])
+            if self.config.save_for_realestate10k_eval:
+                # save for RealEstate10K evaluation, to be used by
+                # https://github.com/facebookresearch/synsin/blob/master/evaluation/evaluate_perceptualsim.py
+                # see https://github.com/facebookresearch/synsin/blob/master/REALESTATE.md for details
+                save_sub_dir = os.path.join(
+                    self.config.forward_results_dir, image_id.split("_")[0]
+                )
+                os.makedirs(save_sub_dir, exist_ok=True)
+
+                im_output = rendering_results["rgb_1_out"][n_im].clamp(min=0, max=1)
+                im_input = sample_list.orig_img_0[n_im].clamp(min=0, max=1)
+                im_tgt = sample_list.orig_img_1[n_im].clamp(min=0, max=1)
+                im_output = skimage.img_as_ubyte(im_output.detach().cpu().numpy())
+                im_input = skimage.img_as_ubyte(im_input.detach().cpu().numpy())
+                im_tgt = skimage.img_as_ubyte(im_tgt.detach().cpu().numpy())
+
+                skimage.io.imsave(save_sub_dir + "/output_image_.png", im_output)
+                skimage.io.imsave(save_sub_dir + "/input_image_.png", im_input)
+                skimage.io.imsave(save_sub_dir + "/tgt_image_.png", im_tgt)
+                continue
+
             save_file = os.path.join(
                 self.config.forward_results_dir,
                 '{}_outputs.npz'.format(image_id.replace("/", "-"))

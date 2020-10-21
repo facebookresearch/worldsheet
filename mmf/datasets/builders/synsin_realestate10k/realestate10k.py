@@ -161,4 +161,4 @@ class RealEstate10K(data.Dataset):
                 }
             ]
 
-        return {"images": rgbs, "cameras": cameras, "video_id": self.imageset[index]}
+        return {"images": rgbs, "cameras": cameras, "video_id": f"{index}_{self.imageset[index]}"}

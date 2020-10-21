@@ -13,14 +13,16 @@ from evaluate_perceptualsim_centercrop_vis import \
 if __name__ == "__main__":
     args = argparse.ArgumentParser()
     args.add_argument("--folder", type=str, default="")
-    args.add_argument("--pred_image", type=str, default="")
-    args.add_argument("--target_image", type=str, default="")
+    args.add_argument("--pred_image", type=str, default="output_image_.png")
+    args.add_argument("--target_image", type=str, default="tgt_image_.png")
     args.add_argument("--take_every_other", action="store_true", default=False)
-    args.add_argument("--output_file", type=str, default="")
+    args.add_argument("--output_file", type=str, default="eval_out")
 
     opts = args.parse_args()
 
     folder = opts.folder
+    if not folder.endswith('/'):
+        folder = folder + '/'
     pred_img = opts.pred_image
     tgt_img = opts.target_image
 

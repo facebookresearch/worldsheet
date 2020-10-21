@@ -106,6 +106,8 @@ if __name__ == "__main__":
     opts = args.parse_args()
 
     folder = opts.folder
+    if not folder.endswith('/'):
+        folder = folder + '/'
     pred_img = opts.pred_image
     tgt_img = opts.target_image
 

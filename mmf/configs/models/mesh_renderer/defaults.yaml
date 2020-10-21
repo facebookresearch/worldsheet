@@ -89,3 +89,4 @@ model_config:
           beta1: 0.5  # same as in pix2pixHD
           beta2: 0.999  # same as in pix2pixHD
           weight_decay: 0.  # same as in pix2pixHD
+      inpaint_missing_regions_only: false

@@ -212,7 +212,12 @@ class MeshRenderer(BaseModel):
                 # the generator has enough capacity to perfectly reconstruct it.
                 rgba_1_rec = torch.ones_like(rgba_1_rec)
                 rgba_1_rec[..., :3] = sample_list.orig_img_1
-            rendering_results["rgb_1_inpaint"] = self.inpainting_net_G(rgba_1_rec)
+            rgb_1_inpaint = self.inpainting_net_G(rgba_1_rec)
+            if self.config.inpainting.inpaint_missing_regions_only:
+                alpha_mask = rgba_1_rec[..., -1].unsqueeze(-1).ge(1e-4).float()
+                rgb_1_inpaint = rgb_1_inpaint * (1 - alpha_mask)
+                rgb_1_inpaint = rgb_1_inpaint + rgba_1_rec[..., :3] * alpha_mask
+            rendering_results["rgb_1_inpaint"] = rgb_1_inpaint
             rendering_results["rgb_1_out"] = rendering_results["rgb_1_inpaint"]
         else:
             _, rgba_1_rec = rendering_results["rgba_out_rec_list"]

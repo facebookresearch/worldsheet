@@ -56,22 +56,12 @@ if __name__ == "__main__":
         "Vis/Perceptual similarity",
     ]
 
-    output_file = opts.output_file + (
-        '.every_other_ON' if opts.take_every_other else '.every_other_OFF'
-    )
-    f = open(output_file, 'w')
     val_print_list = []
     for key in key_print_list:
         print("%s for %s: \n" % (key, opts.folder))
         print(
             "\t {:0.4f} | {:0.4f} \n".format(results[key][0], results[key][1])
         )
-
-        f.write("%s for %s: \n" % (key, opts.folder))
-        f.write(
-            "\t {:0.4f} | {:0.4f} \n".format(results[key][0], results[key][1])
-        )
-
         val_print_list.append(f"{results[key][0]:0.4f}")
 
     print('\n')
@@ -81,6 +71,16 @@ if __name__ == "__main__":
     print(','.join(val_print_list))
     print('-' * 80)
     print('\n')
+
+    output_file = opts.output_file + (
+        '.every_other_ON' if opts.take_every_other else '.every_other_OFF'
+    )
+    f = open(output_file, 'w')
+    for key in key_print_list:
+        f.write("%s for %s: \n" % (key, opts.folder))
+        f.write(
+            "\t {:0.4f} | {:0.4f} \n".format(results[key][0], results[key][1])
+        )
 
     f.write(','.join(key_print_list))
     f.write('\n')

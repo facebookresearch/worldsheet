@@ -19,7 +19,7 @@ class RealEstate10K(data.Dataset):
     """
 
     def __init__(
-        self, dataset, opts=None, num_views=2, seed=0, vectorize=False
+        self, dataset, opts=None, num_views=2, seed=0, num_duplicate=1
     ):
         # Now go through the dataset
 
@@ -32,6 +32,13 @@ class RealEstate10K(data.Dataset):
             self.imageset = self.imageset[0 : int(0.8 * self.imageset.shape[0])]
         else:
             self.imageset = self.imageset[int(0.8 * self.imageset.shape[0]) :]
+        if num_duplicate != 1:
+            # duplicate the dataset -- this is needed mostly for saving PNG image files
+            # for external inpainting training
+            assert isinstance(num_duplicate, int) and num_duplicate >= 2
+            self.imageset = np.concatenate(
+                [self.imageset for _ in range(num_duplicate)], axis=0
+            )
 
         self.rng = np.random.RandomState(seed)
         self.base_file = opts.train_data_path
@@ -161,4 +168,4 @@ class RealEstate10K(data.Dataset):
                 }
             ]
 
-        return {"images": rgbs, "cameras": cameras, "video_id": f"{index}_{self.imageset[index]}"}
+        return {"images": rgbs, "cameras": cameras, "video_id": f"{index:08d}_{self.imageset[index]}"}

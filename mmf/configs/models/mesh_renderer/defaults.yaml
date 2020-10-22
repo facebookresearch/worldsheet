@@ -51,6 +51,7 @@ model_config:
       uint8_conversion: false  # if True, first convert the image to uint8 and then to float32 again, to emulate the precision loss from saving the image to a uint8 PNG file for offline evaluation
     save_forward_results: false
     save_for_realestate10k_eval: false
+    save_for_external_inpainting: false
     forward_results_dir: save/visualization
     return_rendering_results_only: false
     fill_z_with_gt: false

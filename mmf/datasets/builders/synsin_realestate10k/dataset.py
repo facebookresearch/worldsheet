@@ -19,12 +19,21 @@ class SynSinRealEstate10KDataset(BaseDataset):
         super().__init__('synsin_realestate10k', config, dataset_type, *args, **kwargs)
 
         self.num_view_per_sample = config.num_view_per_sample
-        if self._dataset_type == "train":
+        if self._dataset_type == "train" or config.save_for_external_inpainting_train:
             opts = SynSinDatasetOption(
                 config.train_data_dir, config.train_video_list, config.image_size
             )
+            # Always load the training set when `save_for_external_inpainting_train` is
+            # on, regardless of `self._dataset_type` (i.e. using the training set images
+            # of RealEstate10K for inpainting training)
+            # Note that the actual `self._dataset_type` could be `val` or `test`, when
+            # `save_for_external_inpainting_train` is used, because in MMF one can only
+            # run evaluation or predictions in `val` or `test` mode (but training set
+            # images will be actually loaded here even under `val` or `test` mode).
+            split_to_load = "train"
             self.synsin_realestate10k = RealEstate10K(
-                self._dataset_type, opts=opts, num_views=self.num_view_per_sample
+                split_to_load, opts=opts, num_views=self.num_view_per_sample,
+                num_duplicate=config.train_num_duplicate
             )
         elif self._dataset_type == "val":
             self.synsin_realestate10k = RealEstate10KEval(

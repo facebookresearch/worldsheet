@@ -9,6 +9,8 @@ dataset_config:
     eval_val_cameras: ./mmf/datasets/builders/synsin_realestate10k/realestate_val.txt
     eval_test_frames: /checkpoint/ronghanghu/neural_rendering_datasets/realestate10K/RealEstate10K/all_frames/test/
     eval_test_cameras: ./mmf/datasets/builders/synsin_realestate10k/realestate_test.txt
+    save_for_external_inpainting_train: false  # save PNG image files for external inpainting training
+    train_num_duplicate: 1  # duplicate the training video list; only needed when save_for_external_inpainting is True
     processors:
       image_processor:
         type: torchvision_transforms

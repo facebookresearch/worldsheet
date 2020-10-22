@@ -98,6 +98,16 @@ class MeshRenderer(BaseModel):
 
         if self.config.save_forward_results:
             os.makedirs(self.config.forward_results_dir, exist_ok=True)
+            if self.config.save_for_external_inpainting:
+                # save PNG image files for external inpainting training and eval
+                self.inpainting_src_dir = os.path.join(
+                    self.config.forward_results_dir, 'inpainting_src'
+                )
+                self.inpainting_tgt_dir = os.path.join(
+                    self.config.forward_results_dir, 'inpainting_tgt'
+                )
+                os.makedirs(self.inpainting_src_dir, exist_ok=True)
+                os.makedirs(self.inpainting_tgt_dir, exist_ok=True)
 
     def build_losses(self):
         self.loss_image_l1 = ImageL1Loss()
@@ -272,6 +282,22 @@ class MeshRenderer(BaseModel):
                 skimage.io.imsave(save_sub_dir + "/output_image_.png", im_output)
                 skimage.io.imsave(save_sub_dir + "/input_image_.png", im_input)
                 skimage.io.imsave(save_sub_dir + "/tgt_image_.png", im_tgt)
+                continue
+
+            if self.config.save_for_external_inpainting:
+                # save PNG image files for external inpainting training and eval
+                im_src = rgba_1_rec[n_im].clamp(min=0, max=1)
+                im_src_alpha_mask = im_src[..., 3:4].ge(1e-4).float()
+                # save source image into RGBA PNG file, where the last channel is
+                # the visibility alpha_mask
+                im_src = torch.cat([im_src[..., :3], im_src_alpha_mask], dim=-1)
+                im_tgt = sample_list.orig_img_1[n_im].clamp(min=0, max=1)
+
+                base_id = image_id.split("_")[0]
+                im_src = skimage.img_as_ubyte(im_src.detach().cpu().numpy())
+                im_tgt = skimage.img_as_ubyte(im_tgt.detach().cpu().numpy())
+                skimage.io.imsave(self.inpainting_src_dir + f"/{base_id}.png", im_src)
+                skimage.io.imsave(self.inpainting_tgt_dir + f"/{base_id}.png", im_tgt)
                 continue
 
             save_file = os.path.join(

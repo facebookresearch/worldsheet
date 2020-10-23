@@ -37,5 +37,6 @@ class MeshRGBGenerator(nn.Module):
 
         # we output in the original float-point image RGB range 0~1,
         # to be compatible with the mesh rendering results
+        # scale the output w/ img_out_scaling on Tanh activation
         imgs_out = outs * self.G_cfg.img_out_scaling + 0.5
         return imgs_out

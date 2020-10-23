@@ -69,7 +69,7 @@ model_config:
         # Since we often need to generate images that are entirely
         # black or white, let's give it a bit additional output range to (-0.05, 1.05).
         # The range is constrained by the last Tanh layer in the generator network.
-        img_out_scaling: 0.55
+        img_out_scaling: 0.55  # scaling the output from generator network's Tanh activation
         optimizer:
           lr: 2e-4  # same as in pix2pixHD
           beta1: 0.5  # same as in pix2pixHD

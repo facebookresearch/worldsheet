@@ -16,13 +16,18 @@ if __name__ == "__main__":
     args.add_argument("--pred_image", type=str, default="output_image_.png")
     args.add_argument("--target_image", type=str, default="tgt_image_.png")
     args.add_argument("--take_every_other", action="store_true", default=False)
-    args.add_argument("--output_file", type=str, default="eval_out")
+    args.add_argument("--output_file", type=str, default="")
 
     opts = args.parse_args()
 
     folder = opts.folder
     if not folder.endswith('/'):
         folder = folder + '/'
+    output_file = opts.output_file
+    if output_file == "":
+        output_file = folder[:-1] + (
+            '.every_other_ON' if opts.take_every_other else '.every_other_OFF'
+        )
     pred_img = opts.pred_image
     tgt_img = opts.target_image
 
@@ -74,9 +79,6 @@ if __name__ == "__main__":
     print('-' * 80)
     print('\n')
 
-    output_file = opts.output_file + (
-        '.every_other_ON' if opts.take_every_other else '.every_other_OFF'
-    )
     f = open(output_file, 'w')
     for key in key_print_list:
         f.write("%s for %s: \n" % (key, opts.folder))

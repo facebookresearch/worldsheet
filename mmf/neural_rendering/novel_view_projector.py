@@ -6,7 +6,7 @@ from torch import nn
 from pytorch3d.structures import Meshes
 from pytorch3d.renderer import (
     TexturesUV, FoVPerspectiveCameras, RasterizationSettings, MeshRenderer,
-    MeshRasterizer,
+    MeshRasterizer, PointLights, HardFlatShader
 )
 from pytorch3d.renderer.blending import BlendParams
 
@@ -88,22 +88,30 @@ class NovelViewProjector(nn.Module):
         verts = torch.zeros((grid_H * grid_W, 3), dtype=torch.float)
         self.verts = verts
         # a grid mesh
+
+        def _idx(yy, xx):
+            return yy * grid_W + xx
+
+        def _reverse(F, reverse):
+            return F[::-1] if reverse else F
+
+        flip = False
         faces = torch.tensor(
-            [[ny * grid_W + nx, ny * grid_W + nx + 1, (ny + 1) * grid_W + nx]
+            [_reverse([_idx(ny, nx + 1), _idx(ny, nx), _idx(ny + 1, nx)], flip)
              for ny in range(0, grid_H - 1, 2) for nx in range(1, grid_W - 1, 2)] +
-            [[(ny + 1) * grid_W + nx + 1, (ny + 1) * grid_W + nx, ny * grid_W + nx + 1]
+            [_reverse([_idx(ny, nx + 1), _idx(ny + 1, nx), _idx(ny + 1, nx + 1)], flip)
              for ny in range(0, grid_H - 1, 2) for nx in range(1, grid_W - 1, 2)] +
-            [[ny * grid_W + nx, (ny + 1) * grid_W + nx + 1, ny * grid_W + nx + 1]
+            [_reverse([_idx(ny, nx + 1), _idx(ny, nx), _idx(ny + 1, nx + 1)], flip)
              for ny in range(0, grid_H - 1, 2) for nx in range(0, grid_W - 1, 2)] +
-            [[ny * grid_W + nx, (ny + 1) * grid_W + nx + 1, (ny + 1) * grid_W + nx]
+            [_reverse([_idx(ny + 1, nx + 1), _idx(ny, nx), _idx(ny + 1, nx)], flip)
              for ny in range(0, grid_H - 1, 2) for nx in range(0, grid_W - 1, 2)] +
-            [[ny * grid_W + nx, ny * grid_W + nx + 1, (ny + 1) * grid_W + nx]
+            [_reverse([_idx(ny, nx + 1), _idx(ny, nx), _idx(ny + 1, nx)], flip)
              for ny in range(1, grid_H - 1, 2) for nx in range(0, grid_W - 1, 2)] +
-            [[(ny + 1) * grid_W + nx + 1, (ny + 1) * grid_W + nx, ny * grid_W + nx + 1]
+            [_reverse([_idx(ny, nx + 1), _idx(ny + 1, nx), _idx(ny + 1, nx + 1)], flip)
              for ny in range(1, grid_H - 1, 2) for nx in range(0, grid_W - 1, 2)] +
-            [[ny * grid_W + nx, (ny + 1) * grid_W + nx + 1, ny * grid_W + nx + 1]
+            [_reverse([_idx(ny, nx + 1), _idx(ny, nx), _idx(ny + 1, nx + 1)], flip)
              for ny in range(1, grid_H - 1, 2) for nx in range(1, grid_W - 1, 2)] +
-            [[ny * grid_W + nx, (ny + 1) * grid_W + nx + 1, (ny + 1) * grid_W + nx]
+            [_reverse([_idx(ny + 1, nx + 1), _idx(ny, nx), _idx(ny + 1, nx)], flip)
              for ny in range(1, grid_H - 1, 2) for nx in range(1, grid_W - 1, 2)],
             dtype=torch.long
         )
@@ -142,6 +150,30 @@ class NovelViewProjector(nn.Module):
         scaling_factor = torch.tensor([x_scale, y_scale], dtype=torch.float)
         self.register_buffer("scaling_factor", scaling_factor)
 
+        # build a flat shader to render mesh shape only
+        from mmf.common.registry import registry
+        device = registry.get("current_device")
+        self.notexture_renderer = MeshRenderer(
+            rasterizer=MeshRasterizer(
+                cameras=self.cameras,
+                raster_settings=RasterizationSettings(
+                    image_size=image_size_H,
+                    blur_radius=1e-12,
+                    faces_per_pixel=1,
+                    perspective_correct=True,
+                    clip_barycentric_coords=clip_barycentric_coords,
+                )
+            ),
+            shader=HardFlatShader(cameras=self.cameras, device=device)
+        )
+        # a point light at the origin (where the camera is)
+        # the light location will be updated during the forward pass
+        # to transform the origin (0, 0, 0) to world coordinates
+        self.lights = PointLights(
+            location=[[0.0, 0.0, 0.0]] * self.batch_size,
+            device=device
+        )
+
     def _pad_inputs(self, tensor):
         # when a batch has fewer samples than the typical batch size
         # tile the last example to fill the remaining indices in the batch
@@ -161,6 +193,7 @@ class NovelViewProjector(nn.Module):
 
     def forward(
         self, xy_offset, z_grid, rgb_in, R_in, T_in, R_out_list, T_out_list,
+        render_mesh_shape=False
     ):
         # pad the inputs to batch size
         actual_batch_size = rgb_in.size(0)
@@ -217,6 +250,24 @@ class NovelViewProjector(nn.Module):
             "rgba_out_rec_list": rgba_out_rec_list,
             "depth_out_rec_list": depth_out_rec_list,
         }
+
+        if render_mesh_shape:
+            mesh_shape_out_list = []
+            for R_out, T_out in zip(R_out_list, T_out_list):
+                # transform the camera origin to world coordinates
+                # world_lights_location needs to have shape broadcast-able
+                # to the (N, H, W, K, 3) shape of pixel normals
+                world_lights_location = cam2world_in.transform_points(
+                    torch.zeros(self.batch_size, 1, 3, device=R_in.device)
+                ).unsqueeze(1).unsqueeze(1)
+                self.lights.location = world_lights_location
+                deformed_mesh.textures._maps_padded = torch.ones_like(texture_image_rec)
+                mesh_shape_out = self.notexture_renderer(
+                    deformed_mesh, R=R_out, T=T_out, lights=self.lights
+                )
+                mesh_shape_out_list.append(mesh_shape_out)
+
+            results["mesh_shape_out_list"] = mesh_shape_out_list
 
         # strip the outputs to the actual batch size
         if actual_batch_size != self.batch_size:

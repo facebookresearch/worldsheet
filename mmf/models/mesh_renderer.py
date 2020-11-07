@@ -212,7 +212,8 @@ class MeshRenderer(BaseModel):
                 R_in=sample_list.R_0,
                 T_in=sample_list.T_0,
                 R_out_list=[sample_list.R_0, sample_list.R_1],
-                T_out_list=[sample_list.T_0, sample_list.T_1]
+                T_out_list=[sample_list.T_0, sample_list.T_1],
+                render_mesh_shape=self.config.render_mesh_shape_for_vis,
             )
 
         if self.config.use_inpainting:
@@ -260,6 +261,9 @@ class MeshRenderer(BaseModel):
         rgba_0_rec = rgba_0_rec.clamp(min=0, max=1)
         rgba_1_rec = rgba_1_rec.clamp(min=0, max=1)
         depth_0_rec, depth_1_rec = rendering_results["depth_out_rec_list"]
+
+        if self.config.render_mesh_shape_for_vis:
+            mesh_shape_0, mesh_shape_1 = rendering_results["mesh_shape_out_list"]
 
         for n_im in range(xy_offset.size(0)):
             image_id = byte_tensor_to_object(sample_list.image_id[n_im])
@@ -315,6 +319,11 @@ class MeshRenderer(BaseModel):
                 "depth_0_rec": depth_0_rec[n_im],
                 "depth_1_rec": depth_1_rec[n_im],
             }
+            if self.config.render_mesh_shape_for_vis:
+                save_dict.update({
+                    "mesh_shape_0": mesh_shape_0[n_im],
+                    "mesh_shape_1": mesh_shape_1[n_im],
+                })
             if sample_list.dataset_name in ["synsin_habitat", "replica"]:
                 save_dict.update({
                     "depth_0": sample_list.depth_0[n_im],

@@ -52,6 +52,7 @@ model_config:
     save_forward_results: false
     save_for_realestate10k_eval: false
     save_for_external_inpainting: false
+    render_mesh_shape_for_vis: false  # also visualize mesh shape
     forward_results_dir: save/visualization
     return_rendering_results_only: false
     fill_z_with_gt: false

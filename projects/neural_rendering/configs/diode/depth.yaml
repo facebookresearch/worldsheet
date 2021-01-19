@@ -53,4 +53,4 @@ training:
   stdout_capture: false
   find_unused_parameters: true
   log_format: json
-  tensorboard: true
+  tensorboard: false

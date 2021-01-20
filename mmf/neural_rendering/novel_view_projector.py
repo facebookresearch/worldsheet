@@ -37,7 +37,8 @@ class NovelViewProjector(nn.Module):
         z_background,
         gblur_kernel_size,
         gblur_sigma,
-        gblur_weight_thresh
+        gblur_weight_thresh,
+        directly_use_img_as_texture
     ):
         super().__init__()
 
@@ -174,6 +175,8 @@ class NovelViewProjector(nn.Module):
             device=device
         )
 
+        self.directly_use_img_as_texture = directly_use_img_as_texture
+
     def _pad_inputs(self, tensor):
         # when a batch has fewer samples than the typical batch size
         # tile the last example to fill the remaining indices in the batch
@@ -229,9 +232,16 @@ class NovelViewProjector(nn.Module):
 
         # de-rendering to recover the texture map
         deformed_mesh = self.mesh.offset_verts(deform_verts)
-        texture_image_rec, _ = self.unrenderer(
-            deformed_mesh, rgb_in, R=R_in, T=T_in,
-        )
+        if self.directly_use_img_as_texture:
+            # directly using the input image as the mesh texture map
+            # this is not perspective-correct
+            texture_image_rec = rgb_in
+        else:
+            # sample the mesh texture through differentiable texture sampler
+            # this is perspective-correct (undo barycentric coordinate weighting)
+            texture_image_rec, _ = self.unrenderer(
+                deformed_mesh, rgb_in, R=R_in, T=T_in,
+            )
         deformed_mesh.textures._maps_padded = texture_image_rec
 
         rgba_out_rec_list = []

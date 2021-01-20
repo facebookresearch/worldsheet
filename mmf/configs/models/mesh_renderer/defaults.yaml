@@ -25,6 +25,7 @@ model_config:
       gblur_kernel_size: 7
       gblur_sigma: 2
       gblur_weight_thresh: 1e-4
+    directly_use_img_as_texture: false
     train_z_grid_only: false
     mesh_laplacian_use_l2_loss: true
     loss_weights:

@@ -83,7 +83,8 @@ class MeshRenderer(BaseModel):
             z_background=self.config.rendering.z_background,
             gblur_kernel_size=self.config.rendering.gblur_kernel_size,
             gblur_sigma=self.config.rendering.gblur_sigma,
-            gblur_weight_thresh=self.config.rendering.gblur_weight_thresh
+            gblur_weight_thresh=self.config.rendering.gblur_weight_thresh,
+            directly_use_img_as_texture=self.config.directly_use_img_as_texture
         )
 
         self.use_discriminator = False

@@ -456,19 +456,32 @@ class OffsetAndZGridPredictor(nn.Module):
         self.z_pred_offset = z_pred_offset
 
         network = getattr(models, backbone_name)
-        # the minimum output stride for resnet is 8 pixels
+        # 1) the minimum output stride for resnet is 8 pixels
         # if we want lower output stride, add ConvTranspose2d at the end
-        resnet_grid_stride = max(grid_stride, 8)
+        # 2) the maximum output stride for resnet is 32 pixels
+        # if we want higher output stride, use downsample_stride in output conv
+        resnet_grid_stride = min(max(grid_stride, 8), 32)
         self.backbone = network(pretrained=True, output_stride=resnet_grid_stride)
-        assert resnet_grid_stride % grid_stride == 0
+        assert (
+            resnet_grid_stride % grid_stride == 0 or
+            grid_stride % resnet_grid_stride == 0
+        )
         upsample_stride = resnet_grid_stride // grid_stride
-        self.slice_b = upsample_stride // 2
-        self.slice_e = upsample_stride - 1 - self.slice_b
-        if upsample_stride == 1:
-            assert self.slice_b == 0 and self.slice_e == 0
-            self.xy_offset_predictor = nn.Conv2d(backbone_dim, 2, kernel_size=1)
-            self.z_grid_predictor = nn.Conv2d(backbone_dim, 1, kernel_size=1)
+        downsample_stride = grid_stride // resnet_grid_stride
+        if upsample_stride <= 1:
+            assert downsample_stride >= 1
+            self.slice_b = 0
+            self.slice_e = 0
+            # downsample by downsample_stride (usually 1) in the final prediction layer
+            self.xy_offset_predictor = nn.Conv2d(
+                backbone_dim, 2, kernel_size=1, stride=downsample_stride
+            )
+            self.z_grid_predictor = nn.Conv2d(
+                backbone_dim, 1, kernel_size=1, stride=downsample_stride
+            )
         else:
+            self.slice_b = upsample_stride // 2
+            self.slice_e = upsample_stride - 1 - self.slice_b
             # upsample in the final prediction layer
             self.xy_offset_predictor = nn.ConvTranspose2d(
                 backbone_dim, 2, kernel_size=upsample_stride, stride=upsample_stride

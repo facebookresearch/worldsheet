@@ -265,6 +265,7 @@ class MeshRenderer(BaseModel):
 
         if self.config.render_mesh_shape_for_vis:
             mesh_shape_0, mesh_shape_1 = rendering_results["mesh_shape_out_list"]
+            mesh_verts_world_coords = rendering_results["mesh_verts_world_coords"]
 
         for n_im in range(xy_offset.size(0)):
             image_id = byte_tensor_to_object(sample_list.image_id[n_im])
@@ -324,6 +325,7 @@ class MeshRenderer(BaseModel):
                 save_dict.update({
                     "mesh_shape_0": mesh_shape_0[n_im],
                     "mesh_shape_1": mesh_shape_1[n_im],
+                    "mesh_verts_world_coords": mesh_verts_world_coords[n_im],
                 })
             if sample_list.dataset_name in ["synsin_habitat", "replica"]:
                 save_dict.update({

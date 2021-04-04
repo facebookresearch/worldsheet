@@ -256,6 +256,7 @@ class NovelViewProjector(nn.Module):
 
         results = {
             "scaled_verts": scaled_verts,
+            "mesh_verts_world_coords": deformed_mesh.verts_padded(),
             "texture_image_rec": texture_image_rec,
             "rgba_out_rec_list": rgba_out_rec_list,
             "depth_out_rec_list": depth_out_rec_list,

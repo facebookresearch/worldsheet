@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # Copyright (c) Facebook, Inc. and its affiliates.
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
@@ -27,7 +25,9 @@ CLOSE_COMMAND = "close"
 OBSERVATION_SPACE_COMMAND = "observation_space"
 ACTION_SPACE_COMMAND = "action_space"
 CALL_COMMAND = "call"
-
+NAVIGABLE_COMMAND = 'navigate'
+OBSERVATIONS = 'observations'
+AGENT_STATE_COMMAND = 'get_agent_state'
 
 def _make_env_fn(
     config: Config, dataset: Optional[habitat.Dataset] = None, rank: int = 0
@@ -186,6 +186,20 @@ class VectorEnv:
                     else:
                         result = getattr(env, function_name)(*function_args)
                     connection_write_fn(result)
+                elif command == NAVIGABLE_COMMAND:
+                    location = env.sim.sample_navigable_point()
+                    connection_write_fn(location)
+                elif command == OBSERVATIONS:
+                    position, rotation = data
+                    observations = env.sim.get_observations_at(position=position, 
+                                                                    rotation=rotation,
+                                                                    keep_agent_at_new_pose=True)
+                    connection_write_fn((observations))
+                elif command == AGENT_STATE_COMMAND:
+                    agent_state = env.sim.get_agent_state().sensor_states['depth']
+                    rotation = np.array([agent_state.rotation.w, agent_state.rotation.x, agent_state.rotation.y,
+                                         agent_state.rotation.z])
+                    connection_write_fn((agent_state.position, rotation))
                 else:
                     raise NotImplementedError
 
@@ -308,6 +322,27 @@ class VectorEnv:
         """
         self.async_step(actions)
         return self.wait_step()
+
+    def get_observations_at(self, index: int, position: List[float], rotation: List[float]):
+        self._is_waiting = True
+        self._connection_write_fns[index]((OBSERVATIONS, (position, rotation)))
+        observations = self._connection_read_fns[index]()
+        self._is_waiting = False
+        return observations
+
+    def sample_navigable_point(self, index: int):
+        self._is_waiting = True
+        self._connection_write_fns[index]((NAVIGABLE_COMMAND,None))
+        locations = self._connection_read_fns[index]()
+        self._is_waiting = False
+        return locations
+
+    def get_agent_state(self, index: int):
+        self._is_waiting = True
+        self._connection_write_fns[index]((AGENT_STATE_COMMAND,None))
+        cameras = self._connection_read_fns[index]()
+        self._is_waiting = False
+        return cameras
 
     def close(self) -> None:
         if self._is_closed:

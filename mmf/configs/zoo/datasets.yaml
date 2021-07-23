@@ -398,3 +398,12 @@ vqacp_v2:
         - url: https://computing.ece.vt.edu/~aish/vqacp/vqacp_v2_test_questions.json
           file_name: vqacp_v2_test_questions.json
           compressed: false
+
+synsin_habitat:
+  defaults:
+    version: 1.0_2021_07_22
+    resources:
+      annotations:
+      - url: https://dl.fbaipublicfiles.com/worldsheet/data/datasets/synsin_habitat/defaults/annotations/annotations.tar.gz
+        file_name: annotations.tar.gz
+        hashcode: 6d4834cc5e0597a1b8a65bc127bc807b2ab6c6ee413f2091b4f3fcb27dbf0a19

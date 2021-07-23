@@ -1,5 +1,7 @@
 dataset_config:
   synsin_habitat:
+    zoo_requirements:
+    - synsin_habitat.defaults
     data_dir: ${env.data_dir}/datasets
     # dummy options to turn off the default image and feature loader in MMF
     fast_read: false

@@ -1,6 +1,0 @@
-includes:
-- ./defaults.yaml
-
-model_config:
-  mesh_renderer:
-    mesh_laplacian_use_l2_loss: false

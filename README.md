@@ -16,23 +16,47 @@ Project Page: https://worldsheet.github.io/
 
 ## Installation
 
-Our Worldsheet implementation is based on [MMF](https://mmf.sh/) and [PyTorch 3D](https://pytorch3d.org/). This repository is adapted from the MMF repository (https://github.com/facebookresearch/mmf).
+Our Worldsheet implementation is based on [MMF](https://mmf.sh/) and [PyTorch3D](https://pytorch3d.org/). This repository is adapted from the MMF repository (https://github.com/facebookresearch/mmf).
 
-1. Install the MMF dependencies: `pip install -r requirements.txt`
-2. Install PyTorch 3D as follows (we used v0.2.5):
+This code is designed to be run on GPU, CPU training/inference is not supported. 
+
+1. Create a new conda environment:
 ```
+conda create -n worldsheet python=3.8
+conda activate worldsheet
+``` 
+
+2. Download this repository or clone with Git, and then enter the root directory of the repository
+`git clone https://github.com/facebookresearch/worldsheet.git && cd worldsheet`
+
+3. Install the MMF dependencies: `pip install -r requirements.txt`
+
+4. Install PyTorch3D as follows (we used v0.2.5):
+
+```
+# Install using conda
+conda install -c pytorch3d pytorch3d=0.2.5
+
+# Or install from GitHub directly
 git clone https://github.com/facebookresearch/pytorch3d.git && cd pytorch3d
 git checkout v0.2.5
 rm -rf build/ **/*.so
 FORCE_CUDA=1 pip install -e .
 cd ..
+
+# or pip install from github 
+pip install "git+https://github.com/facebookresearch/pytorch3d.git@v0.2.5"
 ```
-3. Download this repository or clone with Git, and then enter the root directory of the repository
-`git clone https://github.com/facebookresearch/worldsheet.git && cd worldsheet`
+
+5. Extra dependencies
+
+```
+pip install scikit-image
+```
 
 ## Train and evaluate on the Matterport3D and Replica datasets
 
-In this work, we use the same Matterport3D and Replica datasets as in [SynSin](https://github.com/facebookresearch/synsin), based on the [Habitat](https://aihabitat.org/) environment. **In our codebase and config files, these two datasets are referred to as `synsin_habitat` (`synsin_mp3d` and `synsin_replica`)** (note that here the `synsin_` prefix only refers to the datasets used in SynSin; the underlying model being trained and evaluated is our Worldsheet mode, not SynSin).
+In this work, we use the same Matterport3D and Replica datasets as in [SynSin](https://github.com/facebookresearch/synsin), based on the [Habitat](https://aihabitat.org/) environment. **In our codebase and config files, these two datasets are referred to as `synsin_habitat` (`synsin_mp3d` and `synsin_replica`)** (note that here the `synsin_` prefix only refers to the datasets used in SynSin; the underlying model being trained and evaluated is our Worldsheet model, not SynSin).
 
 ### Extract the image frames
 
@@ -42,11 +66,9 @@ Please install our modified SynSin codebase from `synsin_for_data_and_eval` bran
 ```
 git clone https://github.com/facebookresearch/worldsheet.git -b synsin_for_data_and_eval synsin && cd synsin
 ```
-and install habitat-sim and habitat-api as additional SynSin dependencies following its installation instruction (https://github.com/ronghanghu/synsin/blob/master/INSTALL.md). For convenience, we provide the corresponding versions of habitat-sim and habitat-api for SynSin in `habitat-sim-for-synsin` and `habitat-sim-for-synsin` branches of this repository.
+and install `habitat-sim` and `habitat-api` as additional SynSin dependencies following the official [SynSin installation instructions](https://github.com/ronghanghu/synsin/blob/master/INSTALL.md). For convenience, we provide the corresponding versions of `habitat-sim` and `habitat-api` for SynSin in `habitat-sim-for-synsin` and `habitat-sim-for-synsin` branches of this repository.
 
-After installing the SynSin codebase from `synsin_for_data_and_eval` branch, set up Matterport3D and Replica datasets following the [instructions](https://github.com/ronghanghu/synsin/blob/master/MP3D.md) in the SynSin codebase, and run the follows to save the image data to disk files.
-
-Save the image frames of the Matterport3D and Replica datasets (you can change `MP3D_SAVE_IMAGE_DIR` to a location on your machine).
+After installing the SynSin codebase from `synsin_for_data_and_eval` branch, set up Matterport3D and Replica datasets following the [instructions](https://github.com/ronghanghu/synsin/blob/master/MP3D.md) in the SynSin codebase, and run the following to save the image frames to disk (you can change `MP3D_SAVE_IMAGE_DIR` to a location on your machine).
 ```
 # this is where Matterport3D and Replica image frames will be extracted
 export MP3D_SAVE_IMAGE_DIR=/checkpoint/ronghanghu/neural_rendering_datasets
@@ -89,12 +111,12 @@ DEBUG="" python evaluation/dump_test_to_mmf.py \
      --batch_size 8 --num_workers 10 --images_before_reset 200 \
      --render_ids 0 --jitter_quaternions_angle 20
 
-cd ../worldsheet  # assuming `synsin` repo and `worldsheet` repo under the same directory
+cd ../worldsheet  # assuming `synsin` repo and `worldsheet` repo are under the same parent directory
 ```
 
 ### Training
 
-Run the following to perform the training and evaluation. In our experiments, we use a single machine with 4 NVIDIA V100-32GB GPUs.
+Run the following to perform training and evaluation. In our experiments, we use a single machine with 4 NVIDIA V100-32GB GPUs.
 ```
 # set to the same path as in image frame extraction above
 export MP3D_SAVE_IMAGE_DIR=/checkpoint/ronghanghu/neural_rendering_datasets
@@ -118,7 +140,7 @@ and run the evaluation below.
 
 The evaluation scripts below will print the performance (PSNR, SSIM, Perc-Sim) on different test data.
 
-Evaluate on the default test sets with the same camera changes as the training data (Table 1)
+Evaluate on the default test sets with the same camera changes as the training data (Table 1):
 ```
 # set to the same path as in image frame extraction above
 export MP3D_SAVE_IMAGE_DIR=/checkpoint/ronghanghu/neural_rendering_datasets
@@ -133,7 +155,7 @@ export MP3D_SAVE_IMAGE_DIR=/checkpoint/ronghanghu/neural_rendering_datasets
 ./run_mp3d_and_replica/eval_replica_test_iter.sh mp3d_nodepth_perceptual_l1laplacian_inpaintGonly_freezemesh 40000
 ```
 
-Evaluate the full model on 2X camera changes (Table 2)
+Evaluate the full model on 2X camera changes (Table 2):
 ```
 # set to the same path as in image frame extraction above
 export MP3D_SAVE_IMAGE_DIR=/checkpoint/ronghanghu/neural_rendering_datasets
@@ -150,13 +172,13 @@ export MP3D_SAVE_IMAGE_DIR=/checkpoint/ronghanghu/neural_rendering_datasets
 
 ### Visualization
 
-One can visualize the model's predictions using the script `run_mp3d_and_replica/visualize_mp3d_val_iter.sh` to visualize the Matterport3D validation set (and modify this script to visualize other splits). For example, run the following to visualize the predictions from the full model:
+One can visualize the model predictions using the script `run_mp3d_and_replica/visualize_mp3d_val_iter.sh` to visualize the Matterport3D validation set (and this script can be modified to visualize other splits). For example, run the following to visualize the predictions from the full model:
 ```
 export MP3D_SAVE_IMAGE_DIR=/checkpoint/ronghanghu/neural_rendering_datasets
 
 ./run_mp3d_and_replica/visualize_mp3d_val_iter.sh mp3d_nodepth_perceptual_l1laplacian_inpaintGonly_freezemesh 40000
 ```
-Then, you can inspect the predictions using notebook `run_mp3d_and_replica/visualize_predictions.ipynb`.
+Then, you can inspect the predictions using the notebook `run_mp3d_and_replica/visualize_predictions.ipynb`.
 
 ## Train and evaluate on the RealEstate10K dataset
 
@@ -193,9 +215,9 @@ and run the evaluation below.
 
 ### Evaluation
 
-Note: as mentioned in the paper, following the evaluation protocol of SynSin on RealEstate10K, the best metrics of two separate predictions based on each view were reported for single-view methods. We follow this evaluation protocol for consistency with SynSin on RealEstate10K in Table 3. We also report averaged metrics over all predictions in supplemental.
+Note: as mentioned in the paper, following the evaluation protocol of SynSin on RealEstate10K, the best metrics of two separate predictions based on each view were reported for single-view methods. We follow this evaluation protocol for consistency with SynSin on RealEstate10K in Table 3. We also report averaged metrics over all predictions in the supplemental.
 
-The scripts below evaluates the performance on RealEstate10K with **averaged metrics** over all predictions, as reported supplemental Table C.1:
+The script below evaluates the performance on RealEstate10K with **averaged metrics** over all predictions, as reported in the supplemental Table C.1:
 ```
 # Evaluate 33x33 mesh (Supplemental Table C.1 line 6)
 ./run_realestate10k/eval_test_iter.sh realestate10k_dscale2_lowerL1_200 50000
@@ -228,7 +250,7 @@ python evaluation/evaluate_realestate10k_all.py \
 
 ### Visualization
 
-One can visualize the model's predictions using the script `run_realestate10k/eval_val_iter.sh` for the RealEstate10K validation set (`run_realestate10k/visualize_test_iter.sh` for the test set). For example, run the following to visualize the predictions from 65x65 mesh:
+One can visualize the model's predictions using the script `run_realestate10k/eval_val_iter.sh` for the RealEstate10K validation set (`run_realestate10k/visualize_test_iter.sh` for the test set). For example, run the following to visualize the predictions from the 65x65 mesh:
 ```
 ./run_realestate10k/visualize_val_iter.sh realestate10k_dscale2_stride4ft_lowerL1_200 50000
 ```

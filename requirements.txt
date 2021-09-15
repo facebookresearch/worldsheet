@@ -1,5 +1,5 @@
-torch==1.6.0
-torchvision==0.7.0
+torch==1.7.1  #+cu110
+torchvision==0.8.2  #+cu110
 numpy>=1.16.6
 tqdm>=4.43.0
 demjson==2.2.4
@@ -13,3 +13,6 @@ omegaconf==2.0.1rc4
 lmdb==0.98
 termcolor==1.1.0
 opencv-python
+Cython==0.29.20
+cupy-cuda110
+# scikit-image==0.15.0

@@ -15,4 +15,3 @@ termcolor==1.1.0
 opencv-python
 Cython==0.29.20
 cupy-cuda110
-# scikit-image==0.15.0

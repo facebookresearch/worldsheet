@@ -258,6 +258,10 @@ Then, you can inspect the predictions using notebook `run_realestate10k/visualiz
 
 We also provide a notebook for interactive predictions in `run_realestate10k/make_interactive_videos.ipynb`, where one can walk through the scene and generate a continuous video of the predicted novel views.
 
+## Wrapping sheets with external depth prediction
+
+In Sec. 4.3 of the paper, we test the limits of wrapping a mesh sheet over a large variety of images. We provide a notebook for this analysis in `external_depth/make_interactive_videos_with_midas_depth.ipynb`, where one can interactively generate a continuous video of the predicted novel views.
+
 ## The structure of Worldsheet codebase
 
 Worldsheet is implemented as a [MMF](https://mmf.sh/) model. This codebase largely follows the structure of typical MMF models and datasets.

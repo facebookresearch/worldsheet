@@ -1,6 +1,6 @@
 ---
 name: "\U0001F680Feature Request"
-about: Submit a proposal/request for a new MMF feature
+about: Submit a proposal/request for a new feature for Worldsheet
 
 ---
 

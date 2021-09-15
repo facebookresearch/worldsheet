@@ -2,6 +2,6 @@
 blank_issues_enabled: false
 
 contact_links:
-  - name: MMF Documentation
-    url: https://mmf.sh/docs
-    about: Check if your issue/documentation is already answered in docs
+  - name: Worldsheet Documentation
+    url: https://github.com/facebookresearch/worldsheet
+    about: Check if your issue/documentation is already answered in the Readme

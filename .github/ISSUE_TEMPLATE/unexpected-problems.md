@@ -1,6 +1,6 @@
 ---
 name: "Unexpected behaviors"
-about: Run into unexpected behaviors when using MMF
+about: Run into unexpected behaviors when using Worldsheet
 title: Please read & provide the following information
 
 ---

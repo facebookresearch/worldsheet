@@ -1,4 +1,8 @@
 # Copyright (c) Facebook, Inc. and its affiliates.
+# All rights reserved.
+
+# This source code is licensed under the BSD-style license found in the
+# LICENSE file in the root directory of this source tree.
 
 # The following script requires Java 1.8.0 and pycocotools installed.
 # The pycocoevalcap can be installed with pip as

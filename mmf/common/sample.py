@@ -1,4 +1,8 @@
 # Copyright (c) Facebook, Inc. and its affiliates.
+# All rights reserved.
+
+# This source code is licensed under the BSD-style license found in the
+# LICENSE file in the root directory of this source tree.
 """
 ``Sample`` and ``SampleList`` are data structures for arbitrary data returned from a
 dataset. To work with MMF, minimum requirement for datasets is to return

@@ -1,4 +1,8 @@
 # Copyright (c) Facebook, Inc. and its affiliates.
+# All rights reserved.
+
+# This source code is licensed under the BSD-style license found in the
+# LICENSE file in the root directory of this source tree.
 """
 Text utils module contains implementations for various decoding strategies like
 Greedy, Beam Search and Nucleus Sampling.

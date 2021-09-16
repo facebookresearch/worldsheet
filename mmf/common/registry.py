@@ -1,4 +1,8 @@
 # Copyright (c) Facebook, Inc. and its affiliates.
+# All rights reserved.
+
+# This source code is licensed under the BSD-style license found in the
+# LICENSE file in the root directory of this source tree.
 """
 Registry is central source of truth in MMF. Inspired from Redux's
 concept of global store, Registry maintains mappings of various information

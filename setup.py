@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 
 # Copyright (c) Facebook, Inc. and its affiliates.
+# All rights reserved.
+
+# This source code is licensed under the BSD-style license found in the
+# LICENSE file in the root directory of this source tree.
 
 import codecs
 import os
@@ -97,7 +101,7 @@ def fetch_package_data():
 
 
 DISTNAME = "mmf"
-DESCRIPTION = "mmf: a modular framework for vision and language multimodal \
+DESCRIPTION = "Worldsheet: Wrapping the World in a 3D Sheet for View Synthesis from a Single Image \
 research."
 LONG_DESCRIPTION = fetch_long_description()
 LONG_DESCRIPTION_CONTENT_TYPE = "text/markdown"

@@ -1,3 +1,0 @@
-includes:
-- ./defaults.yaml
-- ../../../../mmf/configs/datasets/vqa2/with_raw_images.yaml

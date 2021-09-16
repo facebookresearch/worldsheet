@@ -283,7 +283,7 @@ The experimental config files for the RealEstate10K experiments are in the follo
 
 ## Acknowledgements
 
-This repository is modified from the [MMF](https://mmf.sh/) library from Facebook AI Research. A large part of the codebase has been modified from the [pix2pixHD](https://github.com/NVIDIA/pix2pixHD) codebase. Our PSNR, SSIM, and Perc-Sim evaluation scripts are modified from the [SynSin](https://github.com/facebookresearch/synsin) codebase and we also use SynSin for image frame extraction on Matterport3D and Replica.
+This repository is modified from the [MMF](https://mmf.sh/) library from Facebook AI Research. A large part of the codebase has been modified from the [pix2pixHD](https://github.com/NVIDIA/pix2pixHD) codebase. Our PSNR, SSIM, and Perc-Sim evaluation scripts are modified from the [SynSin](https://github.com/facebookresearch/synsin) codebase and we also use SynSin for image frame extraction on Matterport3D and Replica. A part of our differentiable rendering implementation is built upon the [Softmax Splatting](https://github.com/sniklaus/softmax-splatting) codebase. All appropriate licenses are included in the files in which the code is used. 
 
 ## Licence
 

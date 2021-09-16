@@ -1,3 +1,9 @@
+// Copyright (c) Facebook, Inc. and its affiliates.
+// All rights reserved.
+
+// This source code is licensed under the BSD-style license found in the
+// LICENSE file in the root directory of this source tree.
+
 // C implementation of the PHOC respresentation. Converts a string into a PHOC feature vector
 // from https://github.com/lluisgomez/single-shot-str/blob/master/cphoc/cphoc.c
 

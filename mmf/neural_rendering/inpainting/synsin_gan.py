@@ -1,4 +1,5 @@
-# copied from https://github.com/facebookresearch/synsin/blob/82ff948f91a779188c467922c8f5144018b40ac8/models/losses/gan_loss.py
+# @lint-ignore-every LICENSELINT
+# This code is copied from https://github.com/facebookresearch/synsin/blob/82ff948f91a779188c467922c8f5144018b40ac8/models/losses/gan_loss.py
 
 import torch
 import torch.nn as nn

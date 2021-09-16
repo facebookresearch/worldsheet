@@ -3,11 +3,7 @@
 
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
-# All rights reserved.
-#
-# This source code is licensed under the license found in the
-# LICENSE file in the root directory of this source tree.
-#
+
 from mmf.common.registry import registry
 from mmf.datasets.builders.vqa2.dataset import VQA2Dataset
 from mmf.datasets.mmf_dataset_builder import MMFDatasetBuilder

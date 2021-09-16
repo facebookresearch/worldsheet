@@ -1,4 +1,11 @@
-# copy-over from https://github.com/sniklaus/softmax-splatting/blob/master/softsplat.py
+# # @lint-ignore-every LICENSELINT
+# 
+# The splatting operation is copied from the implementation in this codebase:
+# https://github.com/sniklaus/softmax-splatting/blob/master/softsplat.py
+# 
+# Softmax Splatting for Video Frame Interpolation
+# Simon Niklaus and Feng Liu
+# IEEE Conference on Computer Vision and Pattern Recognition 2020
 
 import torch
 

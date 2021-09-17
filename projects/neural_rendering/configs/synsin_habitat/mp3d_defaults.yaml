@@ -1,0 +1,43 @@
+model_config:
+  mesh_renderer:
+    rendering:
+      z_background: 2.269476765638435  # SynSin Matterport3D mean depth
+      background_color: [0.52187616, 0.5030769, 0.47262293]  # SynSin Matterport3D mean RGB
+
+optimizer:
+  type: adam_w  # HuggingFace transformer's AdamW
+  params:
+    lr: 1e-4
+    eps: 1e-8
+    weight_decay: 1e-5
+
+scheduler:
+  type: multi_step
+  params:
+    use_warmup: true
+    lr_steps:
+    - 40000
+    - 45000
+    lr_ratio: 0.2
+    warmup_iterations: 500
+    warmup_factor: 0.25
+
+training:
+  num_workers: 2
+  clip_norm_mode: all
+  clip_gradients: true
+  max_grad_l2_norm: 5
+  lr_scheduler: true
+  max_updates: 50000
+  checkpoint_interval: 10000
+  evaluation_interval: 10000
+  log_interval: 20
+  batch_size: 64
+  early_stop:
+    enabled: false
+    criteria: synsin_habitat/no_grad_PSNR_Vis
+    minimize: false
+  stdout_capture: false
+  find_unused_parameters: true
+  log_format: json
+  tensorboard: false

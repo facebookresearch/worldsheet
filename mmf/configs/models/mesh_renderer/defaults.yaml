@@ -1,0 +1,95 @@
+model_config:
+  mesh_renderer:
+    batch_size: ${training.batch_size}
+    image_size_H: 256
+    image_size_W: 256
+    grid_stride: 8
+    z_min: 0.02
+    z_max: 10.
+    z_pred_scaling: 1.0
+    z_pred_offset: 0.0
+    pred_inv_z: true
+    pred_inv_z_synsin: false
+    backbone_name: resnet50
+    backbone_dim: 2048
+    backbone_lr: 1e-4  # might be too high; kept for backward compatibility
+    rendering:
+      blur_radius: 1e-8
+      faces_per_pixel: 10
+      clip_barycentric_coords: false
+      hfov: 90
+      sigma: 1e-4
+      gamma: 1e-4
+      z_background: 1.7432  # Replica mean depth
+      background_color: [0.64926944, 0.61896299, 0.64431339]  # Replica mean RGB
+      gblur_kernel_size: 7
+      gblur_sigma: 2
+      gblur_weight_thresh: 1e-4
+    directly_use_img_as_texture: false
+    train_z_grid_only: false
+    mesh_laplacian_use_l2_loss: true
+    loss_weights:
+      z_grid_l1_0: 200
+      depth_l1_0: 200
+      depth_l1_1: 200
+      image_l1_1: 400
+      vgg19_perceptual_1: 0.  # kept for backward compatibility
+      grid_offset: 20
+      mesh_laplacian: 0.01
+      image_l1_1_inpaint: 0.  # kept for backward compatibility
+      vgg19_perceptual_1_inpaint: 0.  # kept for backward compatibility
+      gan: 0.  # kept for backward compatibility
+      gan_feat: 0.  # kept for backward compatibility
+      no_grad_d_fake: 1  # no_grad_d_fake and no_grad_d_real are just for logging purposes; they are not back-propagated
+      no_grad_d_real: 1
+    vgg19_loss_only_on_train: true  # since VGG-16 perceptual loss takes a lot of GPU, only use it for training
+    freeze_offset_and_depth_predictor: false
+    metrics:
+      compute_psnr: true
+      compute_ssim: true
+      compute_perc_sim: true
+      only_on_eval: true  # only do so during evaluation phase
+      uint8_conversion: false  # if True, first convert the image to uint8 and then to float32 again, to emulate the precision loss from saving the image to a uint8 PNG file for offline evaluation
+    save_forward_results: false
+    save_for_realestate10k_eval: false
+    save_for_external_inpainting: false
+    render_mesh_shape_for_vis: false  # also visualize mesh shape
+    forward_results_dir: save/visualization
+    return_rendering_results_only: false
+    fill_z_with_gt: false
+    force_zero_xy_offset: false
+    # the inpainting network
+    use_inpainting: false
+    sanity_check_inpaint_with_gt: false
+    inpainting:
+      net_G:
+        ngf: 64
+        n_downsampling: 3  # pix2pixHD uses 4 downsampling layers in global generator; but since we have smaller input size, let's just use 3 here
+        n_blocks: 9
+        norm: instance
+        use_alpha_input: false  # kept for backward compatibility
+        # Since we often need to generate images that are entirely
+        # black or white, let's give it a bit additional output range to (-0.05, 1.05).
+        # The range is constrained by the last Tanh layer in the generator network.
+        img_out_scaling: 0.55  # scaling the output from generator network's Tanh activation
+        optimizer:
+          lr: 2e-4  # same as in pix2pixHD
+          beta1: 0.5  # same as in pix2pixHD
+          beta2: 0.999  # same as in pix2pixHD
+          weight_decay: 0.  # same as in pix2pixHD
+      use_discriminator: false  # kept for backward compatibility
+      net_D:
+        ndf: 64
+        n_layers: 3
+        norm: instance
+        use_alpha_input: false  # kept for backward compatibility
+        gan_mode: PLEASE_FILL_IT
+        no_ganFeat_loss: false
+        num_D: 2
+        lambda_feat: 10.0
+        optimizer:
+          lr: 2e-4
+          beta1: 0.5  # same as in pix2pixHD
+          beta2: 0.999  # same as in pix2pixHD
+          weight_decay: 0.  # same as in pix2pixHD
+      inpaint_missing_regions_only: false

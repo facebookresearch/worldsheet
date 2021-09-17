@@ -1,5 +1,7 @@
 # Worldsheet: Wrapping the World in a 3D Sheet for View Synthesis from a Single Image
 
+<img src=".github/overview.png" width="900"/>
+
 This repository contains the code for the following paper:
 
 * R. Hu, N. Ravi, A. Berg, D. Pathak, *Worldsheet: Wrapping the World in a 3D Sheet for View Synthesis from a Single Image*. in ICCV, 2021. ([PDF](https://arxiv.org/pdf/2012.09854.pdf))
@@ -13,6 +15,7 @@ This repository contains the code for the following paper:
 ```
 
 Project Page: https://worldsheet.github.io/
+
 
 ## Installation
 
